@@ -1,0 +1,123 @@
+<template>
+  <div
+    class="project-list-item"
+    @contextmenu="handleRightClick"
+    :tabindex="tabindex()"
+    @focus="handleFocus"
+    @blur="handleBlur"
+    >
+    <div class="details">
+      <h4 :title="project.title">{{ project.title }}</h4>
+      <code :title="project.path">{{ project.path }}</code>
+      <small v-if="project.deployedDate">Last deployed {{ project.deployedDate }}</small>
+    </div>
+    <div v-if="icon" class="status">
+      <i class="icon" :class="icon" :title="statusTooltip"></i>
+    </div>
+  </div>
+</template>
+
+<script>
+import { ipcRenderer } from 'electron'
+
+export default {
+  name: 'project-list-item',
+  props: {
+    project: Object
+  },
+  computed: {
+    icon () {
+      switch( this.project.status ) {
+        case 'deployed':
+          return 'icon-check-circle';
+        case 'error':
+          return 'icon-alert-circle';
+        case 'deploying':
+          return 'icon-loader';
+        default:
+          return false;
+      }
+    },
+    statusTooltip () {
+      switch( this.project.status ) {
+        case 'deployed':
+          return 'Project has been deployed!';
+        case 'error':
+          return this.project.errorMessage;
+        case 'deploying':
+          return 'Deploying...';
+        default:
+          return '';
+      }
+    }
+  },
+  methods: {
+    handleRightClick (e) {
+      e.preventDefault()
+      ipcRenderer.send('project-context-menu', this.project)
+    },
+    handleFocus (e) {
+      this.$store.dispatch('project_focus', this.project.id)
+    },
+    handleBlur (e) {
+      this.$store.dispatch('project_blur', this.project.id)
+    }
+  }
+}
+</script>
+
+<style lang="scss">
+.project-list-item {
+  display:flex;
+  align-items:center;
+  padding:12px;
+
+  -webkit-user-select: none;
+  cursor:default;
+
+  &:focus {
+    background-color:Highlight;
+    outline:none;
+  }
+
+  code {
+    font-size:.8em;
+  }
+
+  .details {
+    flex-grow:1;
+    overflow:hidden;
+    white-space:nowrap;
+    > * {
+      overflow:hidden;
+      text-overflow:ellipsis;
+      display:block
+    }
+  }
+
+  .status {
+    flex-grow:0;
+    flex-shrink:0;
+    font-size:20px;
+  }
+
+  .icon-check-circle {
+    color: #13CE66;
+  }
+
+  .icon-alert-circle {
+    color: #FF4949;
+  }
+
+  .icon-loader {
+    display: inline-block;
+    line-height: 1;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(1turn); }
+}
+</style>

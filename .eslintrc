@@ -1,0 +1,9 @@
+{
+  "extends": "voxproduct",
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "sourceType": "module",
+    "allowImportExportEverywhere": false,
+    "ecmaVersion": 8
+  }
+}
