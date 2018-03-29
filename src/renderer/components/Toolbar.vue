@@ -1,6 +1,6 @@
 <template>
   <nav class="toolbar">
-    <div class="title-bar"><slot>Vizier</slot></div>
+    <div class="title-bar" v-if="isMac()"><slot>Vizier</slot></div>
     <div class="tools" v-if="hasToolSlots">
       <div><slot name="left"></slot></div>
       <div><slot name="right"></slot></div>

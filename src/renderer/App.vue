@@ -38,7 +38,7 @@
     },
     computed: {
       settingsLabel() {
-        return process.platform === 'darwin' ? 'Preferences' : 'Settings'
+        return this.isMac() ? 'Preferences' : 'Settings'
       },
       ...mapGetters(['hasSelected'])
     }
