@@ -24,6 +24,7 @@
     methods: {
       handleClick (evt) {
         evt.preventDefault()
+        evt.stopPropagation()
         this.$emit('click', evt)
         this.$el.blur()
       }

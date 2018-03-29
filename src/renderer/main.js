@@ -1,3 +1,4 @@
+import { ipcRenderer } from 'electron'
 import Vue from 'vue'
 //import AtComponents from 'at-ui'
 import 'at-ui-style/src/index.scss'
@@ -29,4 +30,22 @@ if ( typeof window !== 'undefined' && window.location.hash === '#settings' ) {
   }).$mount('#app')
 }
 
-if ( typeof window !== 'undefined' ) window.app = app
+if ( typeof window !== 'undefined' ) {
+  window.app = app
+
+  function updateWindowFocus() {
+    const hasFocus = ipcRenderer.sendSync('has-focus')
+    if ( hasFocus ) {
+      let cls = document.body.className
+      cls = cls.replace(/no-focus/g, '').trim()
+      document.body.className = `${cls} focus`.trim()
+    } else {
+      let cls = document.body.className
+      cls = cls.replace(/focus/g, '').trim()
+      document.body.className = `${cls} no-focus`
+    }
+  }
+
+  window.addEventListener('blur', updateWindowFocus)
+  window.addEventListener('focus', updateWindowFocus)
+}

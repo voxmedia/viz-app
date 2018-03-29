@@ -48,11 +48,12 @@ const mutations = {
 }
 
 const actions = {
-  project_focus ( { commit }, id ) {
+  project_focus ( { commit, getters }, id ) {
+    if ( getters.getSelected ) commit('PROJECT_BLUR', getters.getSelected.id)
     commit('PROJECT_FOCUS', id)
   },
-  project_blur ( { commit }, id ) {
-    commit('PROJECT_BLUR', id)
+  project_blur ( { commit, getters } ) {
+    if ( getters.getSelected ) commit('PROJECT_BLUR', getters.getSelected.id)
   },
   project_create ( { commit }, project ) {
     commit('PROJECT_ADD', project)

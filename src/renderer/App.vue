@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <toolbar>
+    <toolbar @click="handleToolbarClick">
       Vizier
       <template slot="left">
         <toolbar-button icon="icon-plus-circle" @click="handleNew">New</toolbar-button>
@@ -22,7 +22,7 @@
   import { ipcRenderer } from 'electron'
 
   export default {
-    name: 'vizier',
+    name: 'app',
     components: { Toolbar, List, ToolbarButton },
     methods: {
       handleNew (eve) {
@@ -34,7 +34,10 @@
       },
       handleSettings (eve) {
         ipcRenderer.send('settings')
-      }
+      },
+      handleToolbarClick (eve) {
+        this.$store.dispatch('project_blur')
+      },
     },
     computed: {
       settingsLabel() {

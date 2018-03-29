@@ -1,10 +1,8 @@
 <template>
   <div
-    class="project-list-item"
+    :class="classes"
     @contextmenu="handleRightClick"
-    :tabindex="tabindex()"
-    @focus="handleFocus"
-    @blur="handleBlur"
+    @click="handleClick"
     >
     <div class="details">
       <h4 :title="project.title">{{ project.title }}</h4>
@@ -49,19 +47,22 @@ export default {
         default:
           return '';
       }
-    }
+    },
+    classes () {
+      let cls = ['project-list-item']
+      if ( this.project.focus ) cls.push('focus')
+      return cls
+    },
   },
   methods: {
     handleRightClick (e) {
       e.preventDefault()
+      this.$store.dispatch('project_focus', this.project.id)
       ipcRenderer.send('project-context-menu', this.project)
     },
-    handleFocus (e) {
+    handleClick(e) {
       this.$store.dispatch('project_focus', this.project.id)
     },
-    handleBlur (e) {
-      this.$store.dispatch('project_blur', this.project.id)
-    }
   }
 }
 </script>
@@ -75,7 +76,7 @@ export default {
   -webkit-user-select: none;
   cursor:default;
 
-  &:focus {
+  &.focus {
     background-color:Highlight;
     outline:none;
   }
@@ -114,6 +115,10 @@ export default {
     line-height: 1;
     animation: spin 1s linear infinite;
   }
+}
+
+body.no-focus .project-list-item.focus {
+  background: #efefef;
 }
 
 @keyframes spin {

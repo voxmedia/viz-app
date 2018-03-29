@@ -1,5 +1,5 @@
 <template>
-  <nav class="toolbar">
+  <nav class="toolbar" @click="handleClick">
     <div class="title-bar" v-if="isMac()"><slot>Vizier</slot></div>
     <div class="tools" v-if="hasToolSlots">
       <div><slot name="left"></slot></div>
@@ -12,7 +12,11 @@
   export default {
     name: 'toolbar',
     //components: { },
-    //methods: { },
+    methods: {
+      handleClick (eve) {
+        this.$emit('click', eve)
+      },
+    },
     computed: {
       hasToolSlots() {
         return this.$slots.left || this.$slots.right
@@ -40,4 +44,6 @@
     align-items:stretch;
   }
 }
+
+body.no-focus .toolbar .title-bar { opacity:0.5; }
 </style>

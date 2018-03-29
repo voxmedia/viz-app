@@ -1,4 +1,5 @@
 import storage from 'electron-json-storage'
+import isEqual from 'lodash/isequal'
 
 const HISTORY_MAX = 20
 const SAVE_FILENAME = 'autosave'
@@ -34,17 +35,20 @@ function clear(cb) {
   })
 }
 
-function save(state) {
-  return storage.set(SAVE_FILENAME, state, (err) => { if (err) throw err })
+function save(data) {
+  return storage.set(SAVE_FILENAME, data, (err) => { if (err) throw err })
 }
 
-function pushState(state) {
+function pushState(newState) {
+  if ( isEqual( newState, state() ) )
+    return console.log('New state is identical to current state, ignoring')
+
   if ( index < history.length - 1 )
     history.splice( index + 1 )
 
-  history.push( state )
+  history.push( newState )
   index = history.length - 1
-  save( state )
+  save( newState )
 
   if ( HISTORY_MAX > history.length )
     history.splice( 0, history.length - HISTORY_MAX )

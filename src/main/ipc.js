@@ -1,12 +1,25 @@
-import { ipcMain } from 'electron'
+import { ipcMain, BrowserWindow } from 'electron'
 import ProjectContextMenu from './menus/ProjectContextMenu'
 import state from './index'
 import storage from './storage'
 import { newProject, deployProject, editSettings } from './actions'
 
+
+// Sync messages
+ipcMain.on( 'get-state', (eve) => {
+  eve.returnValue = state.data
+} )
+
+ipcMain.on( 'has-focus', (eve) => {
+  eve.returnValue = eve.sender.isFocused()
+} )
+
+
+// Async messages
 ipcMain.on( 'project-context-menu', (event, arg) => {
   const menu = ProjectContextMenu(arg)
-  menu.popup({window: state.mainWindow, async: true})
+  const win = BrowserWindow.fromWebContents(event.sender)
+  menu.popup({window: win, async: true})
   event.sender.send('context-menu-close', arg)
 } )
 
@@ -29,10 +42,6 @@ ipcMain.on( 'store-mutate', (eve, arg) => {
   }
 } )
 
-ipcMain.on( 'get-state', (eve) => {
-  eve.returnValue = state.data
-} )
-
 ipcMain.on( 'new-project', (eve, arg) => {
   newProject()
 } )
@@ -45,10 +54,16 @@ ipcMain.on( 'settings', (eve, arg) => {
   editSettings()
 } )
 
+
+// Senders
 export function dispatch(action, payload) {
-  return state.mainWindow.webContents.send( 'store-action', { action, payload } )
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send( 'store-action', { action, payload } )
+  })
 }
 
 export function resetState(data) {
-  return state.mainWindow.webContents.send( 'store-replace-state', data )
+  BrowserWindow.getAllWindows().forEach((win) => {
+    win.webContents.send( 'store-replace-state', data )
+  })
 }
