@@ -29,7 +29,6 @@
         ipcRenderer.send('new-project')
       },
       handleDeploy (eve) {
-        // TODO: this doesn't work with with using focus state in the list
         ipcRenderer.send('deploy-project')
       },
       handleSettings (eve) {

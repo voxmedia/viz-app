@@ -57,6 +57,7 @@ ipcMain.on( 'settings', (eve, arg) => {
 
 // Senders
 export function dispatch(action, payload) {
+  // TODO: what happens if there are no windows?
   BrowserWindow.getAllWindows().forEach((win) => {
     win.webContents.send( 'store-action', { action, payload } )
   })

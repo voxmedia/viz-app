@@ -38,7 +38,33 @@ export function newProject() {
 }
 
 export function deployProject() {
+  if ( !state.selectedProject ) return console.error('deployProject: No selected project!')
   console.log('deploy-project', state.selectedProject.id)
+}
+
+export function openFolder() {
+  if ( !state.selectedProject ) return console.error('openFolder: No selected project!')
+  shell.showItemInFolder(state.selectedProject.path)
+}
+
+export function copyEmbedCode() {
+  if ( !state.selectedProject ) return console.error('copyEmbedCode: No selected project!')
+  console.log('copyEmbedCode')
+}
+
+export function removeFromList() {
+  if ( !state.selectedProject ) return console.error('removeFromList: No selected project!')
+  dispatch('project_remove', state.selectedProject.id)
+}
+
+export function removeFromServer() {
+  if ( !state.selectedProject ) return console.error('removeFromServer: No selected project!')
+  console.log('removeFromServer')
+}
+
+export function deleteAll() {
+  if ( !state.selectedProject ) return console.error('deleteAll: No selected project!')
+  console.log('deleteAll')
 }
 
 export function editSettings() {
@@ -79,34 +105,11 @@ export function editSettings() {
   if (process.platform === 'darwin')
     state.mainWindow.setSheetOffset(22)
 
-  /*
   settingsWindow.on('closed', () => {
     settingsWindow = null
   })
-  */
 
   settingsWindow.on('ready-to-show', () => {
     settingsWindow.show()
   });
-}
-
-export function openFolder() {
-  if ( !state.selectedProject ) return console.error('No selected project!')
-  shell.showItemInFolder(state.selectedProject.path)
-}
-
-export function copyEmbedCode() {
-  console.log('copyEmbedCode')
-}
-
-export function removeFromList() {
-  console.log('removeFromList')
-}
-
-export function removeFromServer() {
-  console.log('removeFromServer')
-}
-
-export function deleteAll() {
-  console.log('deleteAll')
 }

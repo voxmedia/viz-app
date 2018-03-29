@@ -33,7 +33,9 @@ function appReady () {
   })
 }
 
-function createWindow (cb) {
+export function createWindow () {
+  if ( state.mainWindow ) return
+
   /**
    * Initial window options
    */

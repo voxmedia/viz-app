@@ -1,5 +1,6 @@
 import {app, Menu, shell} from 'electron'
 import { newProject, editSettings } from '../actions'
+import { createWindow } from '../index'
 
 const MACOSX_MENUBAR_TEMPLATE = [
   {
@@ -67,8 +68,7 @@ const MACOSX_MENUBAR_TEMPLATE = [
         label: app.getName(),
         accelerator: "CmdOrCtrl+1",
         click() {
-          // TODO: bring back main window
-          console.log('bring back main window');
+          createWindow()
         }
       },
       {type: 'separator'},

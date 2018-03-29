@@ -58,6 +58,9 @@ const actions = {
   project_create ( { commit }, project ) {
     commit('PROJECT_ADD', project)
   },
+  project_remove ( { commit }, id ) {
+    commit('PROJECT_REMOVE', id)
+  },
 }
 
 export default {
