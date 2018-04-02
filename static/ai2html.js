@@ -1,0 +1,1 @@
+<html><body>You are being <a href="https://raw.githubusercontent.com/newsdev/ai2html/master/ai2html.js">redirected</a>.</body></html>
