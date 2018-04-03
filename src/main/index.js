@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import Menubar from './menus/Menubar'
 import { resetState } from './ipc'
 import storage from './storage'
+import worker from './workers'
 
 /**
  * Set `__static` path to static files in production
@@ -32,6 +33,8 @@ function appReady () {
     Menu.setApplicationMenu( Menubar() )
   })
 }
+
+app.on('ready', appReady)
 
 export function createWindow () {
   if ( state.mainWindow ) return
@@ -70,8 +73,6 @@ export function createWindow () {
     state.mainWindow.show()
   });
 }
-
-app.on('ready', appReady)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
