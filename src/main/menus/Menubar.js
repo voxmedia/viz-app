@@ -1,5 +1,5 @@
 import {app, Menu, shell} from 'electron'
-import { newProject, editSettings } from '../actions'
+import { newProject, editSettings, installAi2html } from '../actions'
 import { createWindow } from '../index'
 
 const MACOSX_MENUBAR_TEMPLATE = [
@@ -9,6 +9,7 @@ const MACOSX_MENUBAR_TEMPLATE = [
       {role: 'about'},
       {type: 'separator'},
       {label: 'Preferences', click(eve) { editSettings() }},
+      {label: 'Install ai2html', click(eve) { installAi2html() }},
       {type: 'separator'},
       {role: 'services', submenu: []},
       {type: 'separator'},

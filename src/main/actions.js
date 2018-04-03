@@ -3,6 +3,7 @@ import { dispatch } from './ipc'
 import state from './index'
 import uuid from 'uuid'
 import path from 'path'
+import installAiPlugin from './installAiPlugin'
 
 const homedir = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 function expandHomeDir (p) {
@@ -112,4 +113,10 @@ export function editSettings() {
   settingsWindow.on('ready-to-show', () => {
     settingsWindow.show()
   });
+}
+
+export function installAi2html() {
+  installAiPlugin((success) => {
+    console.log(`Install plugin status: ${success ? 'installed' : 'failed'}`)
+  })
 }
