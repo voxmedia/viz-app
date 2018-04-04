@@ -8,5 +8,7 @@ node_modules/
 npm-debug.log
 npm-debug.log.*
 thumbs.db
+static/project-template/ai2html-output/*
+static/project-template/src/config.yml
 !.gitkeep
 yarn-error.log
