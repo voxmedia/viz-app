@@ -1,9 +1,12 @@
 import { dialog, BrowserWindow, shell } from 'electron'
-import { dispatch } from './ipc'
-import state from './index'
 import uuid from 'uuid'
 import path from 'path'
+import _ from 'lodash'
+import { dispatch } from './ipc'
+import state from './index'
 import installAiPlugin from './installAiPlugin'
+import { run } from './workers'
+import rmrf from 'rimraf'
 
 const homedir = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 function expandHomeDir (p) {
@@ -33,6 +36,13 @@ export function newProject() {
         errorMessage: null,
         focus: false,
       }
+
+      run('project_create', { project, settings: state.data.Settings })
+        .then(pProject => {
+          console.log(pProject)
+          if(!_.isEqual(pProject, project))
+            console.error('changes in project!!!')
+        })
 
       dispatch( 'project_create', project )
     })
@@ -64,8 +74,24 @@ export function removeFromServer() {
 }
 
 export function deleteAll() {
-  if ( !state.selectedProject ) return console.error('deleteAll: No selected project!')
-  console.log('deleteAll')
+  const p = state.selectedProject
+  if ( !p ) return console.error('deleteAll: No selected project!')
+
+  dialog.showMessageBox(
+    state.mainWindow,
+    {
+      buttons: ['Cancel', 'Delete all'],
+      defaultId: 0,
+      title: `Permanently delete ${p.title}`,
+      message: "This will delete the project from your hard drive and the internet. Are you sure you want to do this? There is no undo!",
+    }, (resp) => {
+      if ( resp === 0 ) return
+      rmrf(p.path, (err) => {
+        if (err) dispatch('project_error', p.id, err)
+        else dispatch('project_remove', p.id)
+      })
+    }
+  )
 }
 
 export function editSettings() {
@@ -74,9 +100,9 @@ export function editSettings() {
     : `file://${__dirname}/index.html#settings`
 
   const winWidth = 520
-  const winHeight = 300
+  const winHeight = 340
 
-  let settingsWindow = new BrowserWindow({
+  state.settingsWindow = new BrowserWindow({
     //parent: state.mainWindow,
     //modal: true,
     title: (process.platform == 'darwin') ? 'Preferences' : 'Settings',
@@ -101,22 +127,22 @@ export function editSettings() {
     },
   })
 
-  settingsWindow.loadURL(winURL)
+  state.settingsWindow.loadURL(winURL)
 
   if (process.platform === 'darwin')
-    state.mainWindow.setSheetOffset(22)
+    state.settingsWindow.setSheetOffset(22)
 
-  settingsWindow.on('closed', () => {
-    settingsWindow = null
+  state.settingsWindow.on('closed', () => {
+    state.settingsWindow = null
   })
 
-  settingsWindow.on('ready-to-show', () => {
-    settingsWindow.show()
+  state.settingsWindow.on('ready-to-show', () => {
+    state.settingsWindow.show()
   });
 }
 
-export function installAi2html() {
-  installAiPlugin((success) => {
+export function installAi2html(win) {
+  installAiPlugin(win, (success) => {
     console.log(`Install plugin status: ${success ? 'installed' : 'failed'}`)
   })
 }

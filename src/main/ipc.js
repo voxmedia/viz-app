@@ -2,7 +2,7 @@ import { ipcMain, BrowserWindow } from 'electron'
 import ProjectContextMenu from './menus/ProjectContextMenu'
 import state from './index'
 import storage from './storage'
-import { newProject, deployProject, editSettings } from './actions'
+import { newProject, deployProject, editSettings, installAi2html } from './actions'
 
 
 // Sync messages
@@ -52,6 +52,13 @@ ipcMain.on( 'deploy-project', (eve, arg) => {
 
 ipcMain.on( 'settings', (eve, arg) => {
   editSettings()
+} )
+
+ipcMain.on( 'install-ai2html', (eve, arg) => {
+  if ( arg.from == 'settings-window' )
+    installAi2html(state.settingsWindow)
+  else
+    installAi2html()
 } )
 
 

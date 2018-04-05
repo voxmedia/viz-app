@@ -11,6 +11,7 @@ function createWorker() {
   const proc = fork( workerPath )
   const emitter = new EventEmitter()
   let status = 'new' // new, ready, working, done, error, dead
+  let uses = 0
 
   proc.on('message', (args) => {
     if ( args === 'ready' ) status = 'ready'
@@ -32,13 +33,16 @@ function createWorker() {
   })
 
   return {
+    is(s) {
+      return status === s
+    },
     on(name, cb) {
       emitter.on(name, cb)
     },
     run(task, payload) {
       if ( status !== 'ready' ) return Promise.reject(new Error('Worker not available'))
       status = 'working'
-
+      uses++
       const ret = new Promise((resolve, reject) => {
         emitter.once('job-finish', (res, data) => {
           if ( res === 'done' ) resolve(data)
@@ -53,8 +57,18 @@ function createWorker() {
   }
 }
 
-const worker = createWorker()
+const WORKER_MAX = 5
+const workers = [createWorker()]
 
 export function run(name, payload) {
-  return worker.run(name, payload)
+  for(let i=0; i < workers.length; i++) {
+    const worker = workers[i]
+    if(worker.is('ready')) {
+      return worker.run(name, payload)
+    }
+  }
+
+  if (workers.length < WORKER_MAX) workers.push(createWorker())
+
+  setTimeout(() => run(name, payload), 400 + Math.round(Math.random()*200))
 }

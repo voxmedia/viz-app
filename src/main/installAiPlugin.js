@@ -26,6 +26,8 @@ if ( process.platform === 'darwin' ) {
   SCRIPTS_DIR = 'Presets\\en_US\\Scripts'
 }
 
+let WIN = null
+
 function guessAppPath() {
   return new Promise((resolve, reject) => {
     if ( process.platform in PATHS ) {
@@ -41,14 +43,14 @@ function guessAppPath() {
 
 function chooseAppPath() {
   return new Promise((resolve, reject) => {
-    dialog.showMessageBox({
+    dialog.showMessageBox(WIN, {
       buttons: ['Cancel', 'Choose Illustrator Folder'],
       defaultId: 1,
       title: 'Choose Illustrator Folder',
       message: "Can't find the Adobe Illustrator install location.\n\nClick 'Choose Illustrator Folder' to specify the install location yourself, or cancel installation.",
     }, (resp) => {
       if ( resp === 0 ) return reject()
-      dialog.showOpenDialog({
+      dialog.showOpenDialog(WIN, {
         title: 'Choose Illustrator Folder',
         defaultPath: DEFAULT_PROGRAMS_DIR,
         properties: ['openDirectory',],
@@ -83,24 +85,28 @@ function copyScript(scriptsPath) {
   })
 }
 
-export default function installAiPlugin(cb) {
+export default function installAiPlugin() {
+  const cb = arguments[arguments.length-1]
+  WIN = arguments.length > 1 && arguments[0] ? arguments[0] : null
   guessAppPath()
     .then(findScriptsPath)
     .catch(() => chooseAppPath().then(findScriptsPath))
     .then(copyScript)
     .then((path) => {
-      dialog.showMessageBox({
+      dialog.showMessageBox(WIN, {
         title: 'Install complete',
         message: `The ai2html script has been installed.`,
       })
+      WIN = null
       if ( cb ) cb(true)
     })
     .catch((err) => {
       if ( err )
-        dialog.showMessageBox({
+        dialog.showMessageBox(WIN, {
           title: 'Install failed',
           message: `The ai2html script install failed.\n\n${err.toString()}`,
         })
+      WIN = null
       if ( cb ) cb(false)
     })
 }

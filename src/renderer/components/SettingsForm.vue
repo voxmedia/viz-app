@@ -16,6 +16,14 @@
       </div>
     </div>
 
+    <div class="row at-row flex-middle">
+      <div class="col-6">
+      </div>
+      <div class="col-18">
+        <button type="button" @click="handleAi2htmlInstall">Install ai2html</button>
+      </div>
+    </div>
+
     <fieldset>
       <legend>Amazon S3 Deployment</legend>
 
@@ -75,6 +83,7 @@
 
 <script>
   import { mapGetters } from 'vuex'
+  import { ipcRenderer } from 'electron'
 
   const timers = {}
 
@@ -95,6 +104,9 @@
         timers[key] = setTimeout(() => {
           store.dispatch('set', {key, val})
         }, 300)
+      },
+      handleAi2htmlInstall(eve) {
+        ipcRenderer.send('install-ai2html', {from: 'settings-window'})
       },
     }
   }

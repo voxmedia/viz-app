@@ -35,12 +35,28 @@ const mutations = {
     const proj = state.find(p => p.id === id)
     proj.status = status
   },
+  PROJECT_ERROR ( state, id, error ) {
+    const proj = state.find(p => p.id === id)
+    proj.status = 'error'
+    proj.error = error
+  },
   PROJECT_ADD ( state, project ) {
-    // TODO: is this reactive?
     state.unshift(project)
   },
+  PROJECT_UPDATE ( state, id, data ) {
+    for ( let i=0; i < state.length; i++ ) {
+      const p = state[i]
+      if ( p.id === id ) {
+        for ( let k in data ) {
+          if ( ! k in p ) throw new Error(`Invalid project field '${k}'`)
+          if ( !_.isEqual(data[k], p[k]) ) p[k] = data[k]
+        }
+        break
+      }
+    }
+    const proj = state.find(p => p.id === project.id)
+  },
   PROJECT_REMOVE ( state, id ) {
-    // TODO: is this reactive?
     const proj = state.find(p => p.id === id)
     const idx = state.indexOf( proj )
     state.splice(idx, 1)
@@ -54,6 +70,15 @@ const actions = {
   },
   project_blur ( { commit, getters } ) {
     if ( getters.getSelected ) commit('PROJECT_BLUR', getters.getSelected.id)
+  },
+  project_status ( { commit }, id, status ) {
+    commit('PROJECT_STATUS', id, status)
+  },
+  project_error ( { commit }, id, error ) {
+    commit('PROJECT_ERROR', id, error)
+  },
+  project_update ( { commit }, project ) {
+    commit('PROJECT_UPDATE', project)
   },
   project_create ( { commit }, project ) {
     commit('PROJECT_ADD', project)

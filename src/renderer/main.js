@@ -1,12 +1,12 @@
 import { ipcRenderer } from 'electron'
 import Vue from 'vue'
-//import AtComponents from 'at-ui'
 import 'at-ui-style/src/index.scss'
+//import './assets/base.scss'
+import './mixins'
 
 import App from './App'
 import Settings from './Settings'
 import store from './store'
-import './mixins'
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.config.productionTip = false

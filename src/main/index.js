@@ -14,6 +14,7 @@ if (process.env.NODE_ENV !== 'development') {
 
 const state = {
   mainWindow: null,
+  settingsWindow: null,
   selectedProject: null,
   data: null,
 }
