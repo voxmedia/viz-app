@@ -108,7 +108,11 @@ let rendererConfig = {
             name: 'fonts/[name]--[folder].[ext]'
           }
         }
-      }
+      },
+      {
+        test: /\.ejs$/,
+        loader: 'ejs-loader'
+      },
     ]
   },
   node: {

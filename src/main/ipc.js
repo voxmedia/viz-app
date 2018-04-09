@@ -2,7 +2,7 @@ import { ipcMain, BrowserWindow } from 'electron'
 import ProjectContextMenu from './menus/ProjectContextMenu'
 import state from './index'
 import storage from './storage'
-import { newProject, deployProject, editSettings, installAi2html } from './actions'
+import { newProject, deployProject, editSettings, installAi2html, openInIllustrator } from './actions'
 
 
 // Sync messages
@@ -24,22 +24,29 @@ ipcMain.on( 'project-context-menu', (event, arg) => {
 } )
 
 ipcMain.on( 'store-mutate', (eve, arg) => {
-  if ( !arg.state ) {
-    console.error( 'State is missing in store-mutate ipc', arg.mutation, arg.state )
-    return
-  }
+  if ( !arg.state )
+    return console.error('State is missing in store-mutate ipc', arg.mutation, arg.state)
 
+  // Parse and cache current state
   state.data = JSON.parse( arg.state )
 
+  // Make sure other windows have same state
+  const srcWin = BrowserWindow.fromWebContents(eve.sender)
+  BrowserWindow.getAllWindows().forEach((win) => {
+    if ( srcWin.id !== win.id )
+      win.webContents.send( 'store-replace-state', state.data )
+  })
+
+  // Adjust selectedProject based on mutation
   if ( arg.mutation.type == 'PROJECT_BLUR' ) {
     if ( state.selectedProject && state.selectedProject.id == arg.mutation.payload )
       state.selectedProject = null
   } else if ( arg.mutation.type == 'PROJECT_FOCUS' ) {
     state.selectedProject = state.data.Projects.find(p => p.id == arg.mutation.payload)
-  } else {
-    console.log('store', arg.mutation)
-    storage.pushState( state.data )
   }
+
+  // Store application state
+  storage.pushState( state.data )
 } )
 
 ipcMain.on( 'new-project', (eve, arg) => {
@@ -54,6 +61,10 @@ ipcMain.on( 'settings', (eve, arg) => {
   editSettings()
 } )
 
+ipcMain.on( 'project-open-ai', (eve, arg) => {
+  openInIllustrator()
+} )
+
 ipcMain.on( 'install-ai2html', (eve, arg) => {
   if ( arg.from == 'settings-window' )
     installAi2html(state.settingsWindow)
@@ -64,9 +75,8 @@ ipcMain.on( 'install-ai2html', (eve, arg) => {
 
 // Senders
 export function dispatch(action, payload) {
-  // TODO: what happens if there are no windows?
   BrowserWindow.getAllWindows().forEach((win) => {
-    win.webContents.send( 'store-action', { action, payload } )
+    win.webContents.send( 'store-action', {action, payload} )
   })
 }
 

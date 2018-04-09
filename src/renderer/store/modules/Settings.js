@@ -1,6 +1,9 @@
 const state = {
   //  projectDir: '/Users/ryanmark/Projects',
-  //  scaffoldZip: 'https://github.com/voxmedia/vizier-template/archive/master.zip',
+  //  deployBaseUrl: null,
+  //  deployType: 's3',
+  //  awsBucket: null,
+  //  awsPrefix: null,
   //  awsRegion: null,
   //  awsAccessKeyId: null,
   //  awsSecretAccessKey: null,
@@ -13,7 +16,7 @@ const mutations = {
 }
 
 const actions = {
-  set ({commit}, key, val) {
+  set ({commit}, { key, val }) {
     commit('SETTINGS_SET', {key, val})
   }
 }

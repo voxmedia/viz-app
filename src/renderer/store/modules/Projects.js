@@ -31,19 +31,19 @@ const mutations = {
     const proj = state.find(p => p.id === id)
     proj.focus = false
   },
-  PROJECT_STATUS ( state, id, status ) {
+  PROJECT_STATUS ( state, [id, status] ) {
     const proj = state.find(p => p.id === id)
     proj.status = status
   },
-  PROJECT_ERROR ( state, id, error ) {
+  PROJECT_ERROR ( state, [id, error] ) {
     const proj = state.find(p => p.id === id)
     proj.status = 'error'
-    proj.error = error
+    proj.errorMessage = error
   },
   PROJECT_ADD ( state, project ) {
     state.unshift(project)
   },
-  PROJECT_UPDATE ( state, id, data ) {
+  PROJECT_UPDATE ( state, [id, data] ) {
     for ( let i=0; i < state.length; i++ ) {
       const p = state[i]
       if ( p.id === id ) {
@@ -71,14 +71,14 @@ const actions = {
   project_blur ( { commit, getters } ) {
     if ( getters.getSelected ) commit('PROJECT_BLUR', getters.getSelected.id)
   },
-  project_status ( { commit }, id, status ) {
-    commit('PROJECT_STATUS', id, status)
+  project_status ( { commit }, payload ) {
+    commit('PROJECT_STATUS', payload)
   },
-  project_error ( { commit }, id, error ) {
-    commit('PROJECT_ERROR', id, error)
+  project_error ( { commit }, payload ) {
+    commit('PROJECT_ERROR', payload)
   },
-  project_update ( { commit }, project ) {
-    commit('PROJECT_UPDATE', project)
+  project_update ( { commit }, payload ) {
+    commit('PROJECT_UPDATE', payload)
   },
   project_create ( { commit }, project ) {
     commit('PROJECT_ADD', project)

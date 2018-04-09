@@ -1,6 +1,5 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import Menubar from './menus/Menubar'
-import { resetState } from './ipc'
 import storage from './storage'
 import worker from './workers'
 
@@ -13,10 +12,12 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 const state = {
+  ready: false,
   mainWindow: null,
   settingsWindow: null,
   selectedProject: null,
   data: null,
+  quitting: false,
 }
 export default state
 
@@ -24,12 +25,11 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
-if ( process.env.NODE_ENV === 'development' )
-  storage.clear()
-
 function appReady () {
+  state.ready = true
   storage.load((error, data) => {
     state.data = data
+    state.selectedProject = data.Projects.find(p => p.focus)
     createWindow()
     Menu.setApplicationMenu( Menubar() )
   })
@@ -37,7 +37,7 @@ function appReady () {
 
 app.on('ready', appReady)
 
-export function createWindow () {
+function createWindow () {
   if ( state.mainWindow ) return
 
   /**
@@ -66,21 +66,27 @@ export function createWindow () {
   if (process.platform == 'darwin')
     state.mainWindow.setSheetOffset(22)
 
-  state.mainWindow.on('closed', () => {
-    state.mainWindow = null
+  state.mainWindow.on('close', (eve) => {
+    if (process.platform === 'darwin' && !state.quitting) {
+      eve.preventDefault()
+      state.mainWindow.hide()
+    }
   })
 
-  state.mainWindow.on('ready-to-show', () => {
-    state.mainWindow.show()
-  });
+  state.mainWindow.on('closed', () => state.mainWindow = null)
+  state.mainWindow.on('ready-to-show', () => state.mainWindow.show())
 }
+
+app.on('before-quit', () => state.quitting = true)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
 app.on('activate', () => {
-  if (state.mainWindow === null) createWindow()
+  if (!state.ready || !state.data) return;
+  if (state.mainWindow) state.mainWindow.show()
+  else if (state.mainWindow === null) createWindow()
 })
 
 /**

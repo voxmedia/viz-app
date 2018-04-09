@@ -1,5 +1,6 @@
 import storage from 'electron-json-storage'
 import isEqual from 'lodash/isequal'
+import defaultData from './defaultState'
 
 const HISTORY_MAX = 20
 const SAVE_FILENAME = 'autosave'
@@ -18,7 +19,7 @@ function load(cb) {
     }
 
     if ( Object.keys(data).length === 0 ) {
-      data = require('./defaultState.json')
+      data = defaultData
     }
 
     history.push(data)

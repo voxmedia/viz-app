@@ -21,7 +21,7 @@ let SCRIPTS_DIR = null
 if ( process.platform === 'darwin' ) {
   DEFAULT_PROGRAMS_DIR = '/Applications'
   SCRIPTS_DIR = 'Presets.localized/en_US/Scripts'
-} else if ( process.platform === 'windows' ) {
+} else if ( process.platform === 'win32' ) {
   DEFAULT_PROGRAMS_DIR = 'C:\\Program Files\\'
   SCRIPTS_DIR = 'Presets\\en_US\\Scripts'
 }

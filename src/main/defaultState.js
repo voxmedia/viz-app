@@ -1,5 +1,19 @@
-{
-  "Projects": [
+const state = {
+  "Projects": [],
+  "Settings": {
+    "projectDir": process.platform === 'win32' ? "%HOMEPATH%\\Projects" : "~/Projects",
+    "deployBaseUrl": null,
+    "deployType": 's3',
+    "awsBucket": null,
+    "awsPrefix": null,
+    "awsRegion": 'us-east-1',
+    "awsAccessKeyId": null,
+    "awsSecretAccessKey": null
+  }
+}
+
+if (process.env.NODE_ENV === 'development')
+  state.Projects = [
     {
       "id": 1,
       "title": "My project",
@@ -81,11 +95,6 @@
       "errorMessage": null,
       "focus": false
     }
-  ],
-  "Settings": {
-    "projectDir": "~/Projects",
-    "awsRegion": null,
-    "awsAccessKeyId": null,
-    "awsSecretAccessKey": null
-  }
-}
+  ]
+
+export default state

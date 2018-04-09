@@ -1,20 +1,19 @@
-import { dialog, BrowserWindow, shell } from 'electron'
+import { dialog, BrowserWindow, shell, app, clipboard } from 'electron'
 import uuid from 'uuid'
 import path from 'path'
-import _ from 'lodash'
-import { dispatch } from './ipc'
+import rmrf from 'rimraf'
+import fs from 'fs'
+import { slugify } from 'underscore.string'
+
+import { dispatch, resetState } from './ipc'
 import state from './index'
 import installAiPlugin from './installAiPlugin'
 import { run } from './workers'
-import rmrf from 'rimraf'
+import { errorDialog } from './error'
+import storage from './storage'
+import embedCode from './embedCode.ejs'
 
-const homedir = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
-function expandHomeDir (p) {
-  if (!p) return p;
-  if (p == '~') return homedir;
-  if (p.slice(0, 2) != '~' + path.sep) return p;
-  return path.join(homedir, p.slice(2));
-}
+import { expandHomeDir, compactHomeDir } from '../lib'
 
 export function newProject() {
   dialog.showSaveDialog(
@@ -30,7 +29,7 @@ export function newProject() {
       const project = {
         id: uuid(),
         title: path.basename(filename),
-        path: filename,
+        path: compactHomeDir(filename),
         status: "new",
         deployedDate: null,
         errorMessage: null,
@@ -38,10 +37,10 @@ export function newProject() {
       }
 
       run('project_create', { project, settings: state.data.Settings })
-        .then(pProject => {
-          console.log(pProject)
-          if(!_.isEqual(pProject, project))
-            console.error('changes in project!!!')
+        .then((p) => {
+          console.log("Project created successfully!")
+        }, (err) => {
+          dispatch( 'project_error', [project.id, err.toString()] )
         })
 
       dispatch( 'project_create', project )
@@ -50,17 +49,62 @@ export function newProject() {
 
 export function deployProject() {
   if ( !state.selectedProject ) return console.error('deployProject: No selected project!')
-  console.log('deploy-project', state.selectedProject.id)
+  const project = state.selectedProject
+  dispatch( 'project_status', [project.id, 'deploying'] )
+  run('project_deploy', { project, settings: state.data.Settings, userData: app.getPath('userData') })
+    .then((p) => {
+      dispatch( 'project_status', [project.id, 'deployed'] )
+    }, (err) => {
+      dispatch( 'project_error', [project.id, err] )
+      errorDialog({parentWin: state.mainWindow, message: err})
+    })
 }
 
 export function openFolder() {
   if ( !state.selectedProject ) return console.error('openFolder: No selected project!')
-  shell.showItemInFolder(state.selectedProject.path)
+  const ppath = path.join(state.selectedProject.path, '')
+  if (fs.existsSync(ppath))
+    shell.openItem(ppath)
+  else
+    errorDialog({
+      parentWin: state.mainWindow,
+      message: `Project folder is missing.\r\n\r\nIt should be here:\r\n${project.path}`
+    })
+}
+
+export function openInIllustrator() {
+  if ( !state.selectedProject ) return console.error('openInIllustrator: No selected project!')
+  const p = state.selectedProject
+  const filepath = path.join(p.path, `${p.title}.ai`)
+  if (fs.existsSync(filepath))
+    shell.openItem(filepath)
+  else
+    errorDialog({
+      parentWin: state.mainWindow,
+      message: `Illustrator file is missing.\r\n\r\nIt should be here:\r\n${filepath}`
+    })
 }
 
 export function copyEmbedCode() {
   if ( !state.selectedProject ) return console.error('copyEmbedCode: No selected project!')
-  console.log('copyEmbedCode')
+  const p = state.selectedProject
+  const slug = slugify(state.selectedProject.title)
+  const deploy_url = `${state.data.Settings.deployBaseUrl}/${slug}/`
+  const fallback_img_url = `${deploy_url}fallback-mobile.png`
+  const fallback_img_width = 0
+  const fallback_img_height = 0
+  const height = 150
+  const resizable = true
+  const html = embedCode({
+    slug,
+    deploy_url,
+    fallback_img_url,
+    fallback_img_width,
+    fallback_img_height,
+    height,
+    resizable
+  }).replace(/\s+/g, ' ').trim()
+  clipboard.writeText(html, 'text/html')
 }
 
 export function removeFromList() {
@@ -69,8 +113,30 @@ export function removeFromList() {
 }
 
 export function removeFromServer() {
-  if ( !state.selectedProject ) return console.error('removeFromServer: No selected project!')
-  console.log('removeFromServer')
+  const p = state.selectedProject
+  if ( !p ) return console.error('removeFromServer: No selected project!')
+
+  dialog.showMessageBox(
+    state.mainWindow,
+    {
+      buttons: ['Cancel', 'Delete from internet'],
+      defaultId: 0,
+      title: `Permanently delete ${p.title}`,
+      message: "This will delete the project from the internet.\r\n\r\nAre you sure you want to do this?",
+    }, (resp) => {
+      if ( resp === 0 ) return
+
+      console.log('removeFromServer')
+      dispatch( 'project_status', [project.id, 'deploying'] )
+      run('project_undeploy', { project, settings: state.data.Settings, userData: app.getPath('userData') })
+        .then((p) => {
+          dispatch( 'project_status', [project.id, 'new'] )
+        }, (err) => {
+          dispatch( 'project_error', [project.id, err] )
+          errorDialog({parentWin: state.mainWindow, message: err})
+        })
+    }
+  )
 }
 
 export function deleteAll() {
@@ -83,11 +149,11 @@ export function deleteAll() {
       buttons: ['Cancel', 'Delete all'],
       defaultId: 0,
       title: `Permanently delete ${p.title}`,
-      message: "This will delete the project from your hard drive and the internet. Are you sure you want to do this? There is no undo!",
+      message: "This will delete the project from your hard drive and the internet; there is no undo!\r\n\r\nAre you sure you want to do this?",
     }, (resp) => {
       if ( resp === 0 ) return
       rmrf(p.path, (err) => {
-        if (err) dispatch('project_error', p.id, err)
+        if (err) dispatch('project_error', [p.id, err.toString()])
         else dispatch('project_remove', p.id)
       })
     }
@@ -100,7 +166,7 @@ export function editSettings() {
     : `file://${__dirname}/index.html#settings`
 
   const winWidth = 520
-  const winHeight = 340
+  const winHeight = 430
 
   state.settingsWindow = new BrowserWindow({
     //parent: state.mainWindow,
@@ -144,5 +210,15 @@ export function editSettings() {
 export function installAi2html(win) {
   installAiPlugin(win, (success) => {
     console.log(`Install plugin status: ${success ? 'installed' : 'failed'}`)
+  })
+}
+
+export function clearState() {
+  storage.clear(() => {
+    storage.load((err, data) => {
+      console.log(data)
+      state.data = data
+      resetState(data)
+    })
   })
 }

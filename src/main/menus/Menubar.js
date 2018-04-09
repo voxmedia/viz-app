@@ -1,6 +1,7 @@
 import {app, Menu, shell} from 'electron'
-import { newProject, editSettings, installAi2html } from '../actions'
-import { createWindow } from '../index'
+import { newProject, editSettings, installAi2html, clearState } from '../actions'
+import state from '../index'
+import storage from '../storage'
 
 const MACOSX_MENUBAR_TEMPLATE = [
   {
@@ -36,7 +37,6 @@ const MACOSX_MENUBAR_TEMPLATE = [
       {role: 'cut'},
       {role: 'copy'},
       {role: 'paste'},
-      {role: 'pasteandmatchstyle'},
       {role: 'delete'},
       {role: 'selectall'},
       {type: 'separator'},
@@ -49,15 +49,26 @@ const MACOSX_MENUBAR_TEMPLATE = [
       }
     ]
   },
-  /** remove for production **/
+]
+
+/** remove for production **/
+MACOSX_MENUBAR_TEMPLATE.push(
   {
-    label: 'View',
+    label: 'Dev',
     submenu: [
       {role: 'reload'},
       {role: 'forcereload'},
       {role: 'toggledevtools'},
+      {type: 'separator'},
+      {
+        label: 'Clear storage',
+        click() { clearState() }
+      },
     ]
-  },
+  }
+)
+
+MACOSX_MENUBAR_TEMPLATE.push(
   {
     role: 'window',
     submenu: [
@@ -69,7 +80,7 @@ const MACOSX_MENUBAR_TEMPLATE = [
         label: app.getName(),
         accelerator: "CmdOrCtrl+1",
         click() {
-          createWindow()
+          state.mainWindow.show()
         }
       },
       {type: 'separator'},
@@ -85,7 +96,7 @@ const MACOSX_MENUBAR_TEMPLATE = [
       }
     ]
   }
-]
+)
 
 export default function Menubar () {
   if (process.platform !== 'darwin') return null

@@ -3,6 +3,7 @@
     :class="classes"
     @contextmenu="handleRightClick"
     @click="handleClick"
+    @dblclick="handleDoubleClick"
     >
     <div class="details">
       <h4 :title="project.title">{{ project.title }}</h4>
@@ -62,6 +63,9 @@ export default {
     },
     handleClick(e) {
       this.$store.dispatch('project_focus', this.project.id)
+    },
+    handleDoubleClick(e) {
+      ipcRenderer.send('project-open-ai', this.project)
     },
   }
 }

@@ -1,81 +1,26 @@
 <template>
   <form class="settings" @submit="handleSubmit">
-    <div class="row at-row flex-middle">
-      <div class="col-6">
-        <label for="project-dir">Project folder</label>
-      </div>
-      <div class="col-18">
-        <input
-          name="projectDir"
-          type="text"
-          id="project-dir"
-          @input="handleInput"
-          placeholder="Enter a directory path"
-          :value="settings.projectDir"
-        ></input>
-      </div>
-    </div>
+    <settings-input name="projectDir" placeholder="Enter a directory path" @input="handleInput" label-cols="6">Default project save location</settings-input>
 
     <div class="row at-row flex-middle">
       <div class="col-6">
       </div>
       <div class="col-18">
-        <button type="button" @click="handleAi2htmlInstall">Install ai2html</button>
+        <at-button @click="handleAi2htmlInstall" icon="icon-package">Install ai2html</at-button>
       </div>
     </div>
 
     <fieldset>
       <legend>Amazon S3 Deployment</legend>
 
-      <p class='hint'>If you leave these blank, the app will attempt find this data in your environment variables</p>
+      <!--<p class='hint'>If you leave these blank, the app will attempt find this data in your environment variables</p>-->
+      <settings-input name="deployBaseUrl" placeholder="ex. https://apps.voxmedia.com/graphics" @input="handleInput">Public URL for deployed&nbsp;projects</settings-input>
+      <settings-input name="awsBucket" placeholder="ex. apps.voxmedia.com" @input="handleInput">AWS Bucket</settings-input>
+      <settings-input name="awsPrefix" placeholder="ex. graphics" @input="handleInput">AWS Path in&nbsp;bucket</settings-input>
 
-      <div class="row at-row flex-middle">
-        <div class="col-8">
-          <label for="aws-region">AWS Region</label>
-        </div>
-        <div class="col-16">
-          <input
-            name="awsRegion"
-            type="text"
-            id="aws-region"
-            @input="handleInput"
-            placeholder="ex: us-east-1"
-            :value="settings.awsRegion"
-          ></input>
-        </div>
-      </div>
-
-      <div class="row at-row flex-middle">
-        <div class="col-8">
-          <label for="aws-access-key-id">AWS Access Key&nbsp;ID</label>
-        </div>
-        <div class="col-16">
-          <input
-            name="awsAccessKeyId"
-            type="text"
-            id="aws-access-key-id"
-            @input="handleInput"
-            placeholder="ex: AKIAIOSFODNN7EXAMPLE"
-            :value="settings.awsAccessKeyId"
-          ></input>
-        </div>
-      </div>
-
-      <div class="row at-row flex-middle">
-        <div class="col-8">
-          <label for="aws-secret-access-key">AWS Secret Access&nbsp;Key</label>
-        </div>
-        <div class="col-16">
-          <input
-            name="awsSecretAccessKey"
-            type="password"
-            id="aws-secret-access-key"
-            @input="handleInput"
-            placeholder="ex: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-            :value="settings.awsSecretAccessKey"
-          ></input>
-        </div>
-      </div>
+      <settings-input name="awsRegion" placeholder="ex: us-east-1" @input="handleInput">AWS Region</settings-input>
+      <settings-input name="awsAccessKeyId" placeholder="ex: AKIAIOSFODNN7EXAMPLE" @input="handleInput">AWS Access Key&nbsp;ID</settings-input>
+      <settings-input name="awsSecretAccessKey" placeholder="ex: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" @input="handleInput">AWS Secret Access&nbsp;Key</settings-input>
 
     </fieldset>
   </form>
@@ -84,11 +29,14 @@
 <script>
   import { mapGetters } from 'vuex'
   import { ipcRenderer } from 'electron'
+  import atButton from 'at-ui/src/components/button'
+  import SettingsInput from './SettingsInput'
 
   const timers = {}
 
   export default {
     name: 'settings-form',
+    components: { atButton, SettingsInput },
     props: {
       settings: Object
     },
@@ -97,13 +45,14 @@
         eve.preventDefault()
       },
       handleInput(eve) {
+        console.log('recieve input')
         const val = eve.target.value
         const key = eve.target.name
         const store = this.$store
         if ( timers[key] ) clearTimeout(timers[key])
         timers[key] = setTimeout(() => {
           store.dispatch('set', {key, val})
-        }, 300)
+        }, 500)
       },
       handleAi2htmlInstall(eve) {
         ipcRenderer.send('install-ai2html', {from: 'settings-window'})
@@ -138,4 +87,5 @@ legend {
 .row + .hint {
   margin-top:12px;
 }
+.at-btn { cursor:default; }
 </style>

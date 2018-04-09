@@ -1,7 +1,8 @@
 import {app, Menu, shell} from 'electron'
-import { openFolder, copyEmbedCode, deployProject, removeFromList, removeFromServer, deleteAll } from '../actions'
+import { openInIllustrator, openFolder, copyEmbedCode, deployProject, removeFromList, removeFromServer, deleteAll } from '../actions'
 
 const PROJECT_CONTEXT_MENU_TEMPLATE = [
+  {label: 'Open in Illustrator', click() { openInIllustrator() }},
   {label: 'Open folder', click() { openFolder() }},
   {label: 'Copy embed code', click() { copyEmbedCode() }},
   {type: 'separator'},
@@ -9,7 +10,7 @@ const PROJECT_CONTEXT_MENU_TEMPLATE = [
   {label: 'Deploy', click() { deployProject() }},
   {type: 'separator'},
   {label: 'Remove from list', click() { removeFromList() }},
-  {label: 'Remove project from servers', click() { removeFromServer() }},
+  {label: 'Delete from servers', click() { removeFromServer() }},
   {label: 'Delete permanently', click() { deleteAll() }},
 ]
 
