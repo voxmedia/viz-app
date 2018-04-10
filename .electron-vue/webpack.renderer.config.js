@@ -109,10 +109,6 @@ let rendererConfig = {
           }
         }
       },
-      {
-        test: /\.ejs$/,
-        loader: 'ejs-loader'
-      },
     ]
   },
   node: {

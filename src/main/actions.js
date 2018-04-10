@@ -12,7 +12,7 @@ import installAiPlugin from './installAiPlugin'
 import { run } from './workers'
 import { errorDialog } from './error'
 import storage from './storage'
-import embedCode from './embedCode.ejs'
+import embedCode from './embedCode'
 
 import { expandHomeDir, compactHomeDir } from '../lib'
 

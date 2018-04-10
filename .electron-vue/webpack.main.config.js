@@ -38,10 +38,6 @@ let mainConfig = {
         test: /\.node$/,
         use: 'node-loader'
       },
-      {
-        test: /\.ejs$/,
-        loader: 'ejs-loader'
-      },
     ]
   },
   node: {

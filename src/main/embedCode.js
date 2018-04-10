@@ -1,3 +1,7 @@
+import { template } from 'lodash'
+
+// the webpack 'ejs-loader' does not work
+export default template(`
 <div data-analytics-viewport="autotune"
      data-analytics-label="<%=slug %>"
      id="<%=slug %>__graphic"
@@ -25,4 +29,4 @@
     l();
   }
 })();
-</script>
+</script>`)
