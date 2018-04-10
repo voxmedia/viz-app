@@ -6,7 +6,7 @@ export default function createProject({ project, settings }) {
   return new Promise((resolve, reject) => {
     fs.mkdirSync(project.path)
 
-    const expected = 3
+    const expected = 2
     const errors = []
     let count = 0
     function end(error) {
@@ -16,11 +16,6 @@ export default function createProject({ project, settings }) {
         else resolve(project)
       }
     }
-
-    fs.mkdir(project.path + '/ai2html-output', (err) => {
-      if (err) end(err)
-      else end()
-    })
 
     gulp.src(__static + '/project-template/template.ai')
       .pipe(rename({basename: project.title}))

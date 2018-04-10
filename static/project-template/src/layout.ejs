@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{{headline}}</title>
+  <title><%=config.headline%></title>
 
   <meta name="viewport" content="width=device-width, user-scalable=no" />
   <meta name="description" content="An updating list of the reckoning." />
@@ -10,7 +10,7 @@
   <meta property="fb:app_id" content="1477830955774082" />
   <meta property="og:site_name" content="Vox.com" />
   <meta property="og:type" content="article" />
-  <meta property="og:title" content="{{headline}}" />
+  <meta property="og:title" content="<%=config.headline%>" />
   <meta property="og:image" content="" />
   <meta property="og:description" content="" />
   <meta property="og:url" content="" />
@@ -190,6 +190,6 @@
 
 </head>
 <body>
-  {{ai2htmlPartial}}
+  <%=content%>
 </body>
 </html>

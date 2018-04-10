@@ -1,19 +1,5 @@
-// ai2html.js
-
-function main() {
-// Enclosing scripts in a named function (and not an anonymous, self-executing
-// function) has been recommended as a way to minimise intermittent "MRAP" errors.
-// (This advice may be superstitious, need more evidence to decide.)
-// See (for example) https://forums.adobe.com/thread/1810764 and
-// http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/pdf/illustrator/scripting/Readme.txt
-
-// Increment final digit for bug fixes, middle digit for new functionality.
-// Remember to add an entry in CHANGELOG when updating the version number
-// And update the version number in package.json
-var scriptVersion = "0.67.1";
-
 // ai2html is a script for Adobe Illustrator that converts your Illustrator document into html and css.
-// Copyright (c) 2011-2015 The New York Times Company
+// Copyright (c) 2011-2018 The New York Times Company
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this library except in compliance with the License.
 // You may obtain a copy of the License at
@@ -46,6 +32,17 @@ var scriptVersion = "0.67.1";
 // - Go to the folder containing your Illustrator file. Inside will be a folder called ai2html-output.
 // - Open the html files in your browser to preview your output.
 
+function main() {
+// Enclosing scripts in a named function (and not an anonymous, self-executing
+// function) has been recommended as a way to minimise intermittent "MRAP" errors.
+// (This advice may be superstitious, need more evidence to decide.)
+// See (for example) https://forums.adobe.com/thread/1810764 and
+// http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/pdf/illustrator/scripting/Readme.txt
+
+// Increment middle digit for new functionality or breaking changes.
+// Increment final digit for minor bug fixes.
+// Also update the version number in package.json
+var scriptVersion = "0.68.1";
 
 // ================================================
 // ai2html and config settings
@@ -67,13 +64,13 @@ var defaultBaseSettings = {
     notes: ""
   },
   create_fallback_images: {
-    defaultValue: "yes",
+    defaultValue: "smallest",
     includeInSettingsBlock: false,
     includeInConfigFile: false,
     useQuoteMarksInConfigFile: false,
-    inputType: "yesNo",
-    possibleValues: "",
-    notes: "Set this to 'yes' to export an image of each artboard in addition to html output"
+    inputType: "text",
+    possibleValues: "all, smallest, largest",
+    notes: "Set this to 'all' to export an image of each artboard in addition to html output"
   },
   image_format: {
     defaultValue: ["auto"],
@@ -184,7 +181,7 @@ var defaultBaseSettings = {
     notes: "This only gets used to write the config file. It’s not used in the nyt mode to read the config.yml. Path should written relative to the ai file location."
   },
   local_preview_template: {
-    defaultValue: "src/layout.mustache",
+    defaultValue: "",
     includeInSettingsBlock: false,
     includeInConfigFile: false,
     useQuoteMarksInConfigFile: false,
@@ -851,7 +848,7 @@ function render() {
   //=====================================
   // write fallback images
   //=====================================
-  if ( isTrue(docSettings.create_fallback_images) ) {
+  if ( docSettings.create_fallback_images ) {
     createFallbackImages(docSettings)
   }
 
@@ -1243,6 +1240,20 @@ function readGitConfigFile(path) {
   return o;
 }
 
+function readFile(path) {
+  var content = null;
+  var file = new File(path);
+  if (file.exists) {
+    file.open("r");
+    content = file.read();
+    file.close();
+  } else {
+    warnings.push(path + " could not be found.");
+  }
+  return content;
+}
+
+// TODO: switch to readFile() or explain why we would want to read a text file this way
 function readTextFile(path) {
   var outputText = "";
   var file = new File(path);
@@ -1442,7 +1453,7 @@ function detectTimesFonts() {
   return found;
 }
 
-function initDocumentSettings() {
+function initDocumentSettings(env) {
   ai2htmlBaseSettings = defaultBaseSettings;
   // initialize document settings
   docSettings = {};
@@ -1521,39 +1532,42 @@ function createSettingsBlock() {
   textArea.contents = settingsLines.join('\n');
 }
 
-
 // Add ai2html settings from a text block to the document settings object
 function parseSettingsEntries(entries, docSettings) {
   var entryRxp = /^([\w-]+)\s*:\s*(.*)$/;
   forEach(entries, function(str) {
-    var match, hashKey, hashValue;
+    var match, key, value;
     str = trim(str);
     match = entryRxp.exec(str);
     if (!match) {
       if (str) warnings.push("Malformed setting, skipping: " + str);
       return;
     }
-    hashKey   = match[1];
-    hashValue = straightenCurlyQuotesInsideAngleBrackets(match[2]);
-    if (hashKey in docSettings === false) {
+    key   = match[1];
+    value = straightenCurlyQuotesInsideAngleBrackets(match[2]);
+    if (key in docSettings === false) {
       // assumes docSettings has been initialized with default settings
-      warnings.push("Settings block contains an unsupported parameter: " + hashKey);
+      warnings.push("Settings block contains an unsupported parameter: " + key);
     }
-    // replace values from old versions of script with current values
-    if (hashKey=="output" && hashValue=="one-file-for-all-artboards") { hashValue="one-file"; }
-    if (hashKey=="output" && hashValue=="one-file-per-artboard")      { hashValue="multiple-files"; }
-    if (hashKey=="output" && hashValue=="preview-one-file")           { hashValue="one-file"; }
-    if (hashKey=="output" && hashValue=="preview-multiple-files")     { hashValue="multiple-files"; }
-    if ((hashKey in ai2htmlBaseSettings) && ai2htmlBaseSettings[hashKey].inputType=="array") {
-      hashValue = hashValue.replace( /[\s,]+/g , ',' );
-      if (hashValue.length === 0) {
-        hashValue = []; // have to do this because .split always returns an array of length at least 1 even if it's splitting an empty string
-      } else {
-        hashValue = hashValue.split(",");
+    if (key == 'output') {
+      // replace values from old versions of script with current values
+      if (value == 'one-file-for-all-artboards' || value == 'preview-one-file') {
+        value = 'one-file';
+      }
+      if (value == 'one-file-per-artboard' || value == 'preview-multiple-files') {
+        value = 'multiple-files';
       }
     }
-    docSettings[hashKey] = hashValue;
+    if (key == "image_format") {
+      value = parseAsArray(value);
+    }
+    docSettings[key] = value;
   });
+}
+
+function parseAsArray(str) {
+  str = trim(str).replace( /[\s,]+/g , ',' );
+  return str.length === 0 ? [] : str.split(',');
 }
 
 // Show alert or prompt; return true if promo image should be generated
@@ -1837,6 +1851,22 @@ function forEachUsableArtboard(cb) {
       cb(ab, i);
     }
   }
+}
+
+
+// Returns id of artboard with smallest area
+function findSmallestArtboard() {
+  var smallestId = -1;
+  var smallestArea = null;
+  forEachUsableArtboard(function(ab, i) {
+    var info = convertAiBounds(ab.artboardRect);
+    var area = info.width * info.height;
+    if (smallestArea == null || area < smallestArea) {
+      smallestId = i;
+      smallestArea = area;
+    }
+  });
+  return smallestId;
 }
 
 // Returns id of artboard with largest area
@@ -2769,40 +2799,30 @@ function uniqAssetName(name, names) {
 
 // Generate images and return HTML embed code
 function convertArtItems(activeArtboard, textFrames, masks, settings) {
-  var imageFolder = getImageFolder(settings);
   var imgName = getArtboardImageName(activeArtboard);
-  var imgFile = imgName + '.' + (settings.image_format[0] || "png").substring(0,3);
-  var imgId = getImageId(imgName);
-  var imgClass = nameSpace + 'aiImg';
-  var imageDestination = pathJoin(imageFolder, imgName);
   var hideTextFrames = !isTrue(settings.testing_mode);
+  var textFrameCount = textFrames.length;
   var html = "";
-  var n = textFrames.length;
-  var imageNames = [];
-  var svgLayers;
+  var svgLayers, svgNames;
   var i;
 
-  checkForOutputFolder(imageFolder, "image_output_path");
+  checkForOutputFolder(getImageFolder(settings), "image_output_path");
 
   if (hideTextFrames) {
-    for (i=0; i<n; i++) {
+    for (i=0; i<textFrameCount; i++) {
       textFrames[i].hidden = true;
     }
   }
 
   svgLayers = findSvgExportLayers();
   if (svgLayers.length > 0) {
+    svgNames = [];
     forEach(svgLayers, function(lyr) {
-      var svgName = uniqAssetName(getLayerImageName(lyr, activeArtboard), imageNames);
-      var svgId = getImageId(svgName);
-      var svgClass = imgClass + ' ' + nameSpace + 'aiAbs';
-      var outputPath = pathJoin(imageFolder, svgName);
-      var ofile = exportSVG(outputPath, activeArtboard, masks, [lyr]);
-      if (ofile) {
-        // only generate html for files that were created (empty files are not created)
-        message('Exported a layer as ' + ofile.replace(/.*\//, ''));
-        imageNames.push(svgName);
-        html += generateImageHtml(svgName + '.svg', svgId, svgClass, activeArtboard, settings);
+      var svgName = uniqAssetName(getLayerImageName(lyr, activeArtboard), svgNames);
+      var svgHtml = exportImage(svgName, 'svg', activeArtboard, masks, [lyr], settings);
+      if (svgHtml) {
+        svgNames.push(svgName);
+        html += svgHtml;
       }
     });
 
@@ -2812,8 +2832,7 @@ function convertArtItems(activeArtboard, textFrames, masks, settings) {
     });
   }
 
-  captureArtboardImage(imageDestination, activeArtboard, masks, settings);
-  html += generateImageHtml(imgFile, imgId, imgClass, activeArtboard, settings);
+  html += captureArtboardImage(imgName, activeArtboard, masks, settings);
 
   // unhide svg export layers (if any)
   forEach(svgLayers, function(lyr) {
@@ -2822,7 +2841,7 @@ function convertArtItems(activeArtboard, textFrames, masks, settings) {
 
 
   if (hideTextFrames) {
-    for (i=0; i<n; i++) {
+    for (i=0; i<textFrameCount; i++) {
       textFrames[i].hidden = false;
     }
   }
@@ -2860,15 +2879,60 @@ function getImageFolder(settings) {
   return pathJoin(docPath, settings.html_output_path, settings.image_output_path);
 }
 
+// Capture and save an image to the filesystem and return html embed code
+//
+function exportImage(imgName, format, ab, masks, layers, settings) {
+  // for file extension, convert png24 -> png; other format names are same as extension
+  var fileExt = '.' + format.substring(0, 3);
+  var imgFile = imgName + fileExt;
+  var outputPath = pathJoin(getImageFolder(settings), imgFile);
+  var imgId = getImageId(imgName);
+  var imgClass = nameSpace + 'aiImg';
+  var created, html;
+
+  if (format == 'svg') {
+    created = exportSVG(outputPath, ab, masks, layers);
+    if (!created) {
+      return ''; // no image was created
+    }
+    rewriteSVGFile(outputPath, imgId);
+
+    if (layers) {
+      // layer images are absolutely positioned
+      imgClass += ' ' + nameSpace + 'aiAbs';
+      message('Exported a layer as ' + outputPath.replace(/.*\//, ''))
+    }
+
+  } else {
+    // raster image export
+    exportImageFile(outputPath, ab, format, settings);
+  }
+
+  if (format == 'svg' && settings.inline_svg) {
+    html = generateInlineSvg(outputPath, imgClass);
+  } else {
+    html = generateImageHtml(imgFile, imgId, imgClass, ab, settings);
+  }
+  return html;
+}
+
+function generateInlineSvg(imgPath, imgClass) {
+  var svg = readFile(imgPath) || '';
+  svg = svg.replace(/<\?xml.*?\?>/, '');
+  svg = svg.replace('<svg', '<svg class="' + imgClass + '"');
+  return svg;
+}
 
 // ab: artboard (assumed to be the active artboard)
-// textFrames:  text frames belonging to the active artboard
-function captureArtboardImage(imageDestination, ab, masks, settings) {
-  exportImageFiles(imageDestination, ab, settings.image_format, 1, docSettings.use_2x_images_if_possible);
-  if (contains(settings.image_format, 'svg')) {
-    exportSVG(imageDestination, ab, masks);
-  }
+function captureArtboardImage(imgName, ab, masks, settings) {
+  var retn;
+  forEach(settings.image_format, function(format) {
+    var html = exportImage(imgName, format, ab, masks, null, settings);
+    if (!retn) retn = html; // use embed code for first of multiple formats
+  });
+  return retn;
 }
+
 
 // Create an <img> tag for the artboard image
 function generateImageHtml(imgFile, imgId, imgClass, ab, settings) {
@@ -2888,50 +2952,46 @@ function generateImageHtml(imgFile, imgId, imgClass, ab, settings) {
 
 // Create a promo image from the largest usable artboard
 function createPromoImage(settings) {
-  var PROMO_WIDTH = 1024;
   var abNumber = findLargestArtboard();
   if (abNumber == -1) return; // TODO: show error
-
-  var artboard         =  doc.artboards[abNumber],
-      abPos            =  convertAiBounds(artboard.artboardRect),
-      promoScale       =  PROMO_WIDTH / abPos.width,
-      promoW           =  abPos.width * promoScale,
-      promoH           =  abPos.height * promoScale,
-      imageDestination =  docPath + docName + "-promo",
-      promoFormat, tmpPngTransparency;
-
-  // Previous file name was more complicated:
-  // imageDestination = docPath + docSettings.docName + "-" + makeKeyword(ab.name) + "-" + abNumber + "-promo";
-
+  var artboard   = doc.artboards[abNumber],
+      abPos      = convertAiBounds(artboard.artboardRect),
+      format     = contains(settings.image_format, 'jpg') ? 'jpg' : 'png',
+      outputPath = docPath + docName + "-promo." + format,
+      opts = {
+        image_width: settings.promo_image_width || 1024,
+        jpg_quality: settings.jpg_quality,
+        png_number_of_colors: settings.png_number_of_colors,
+        png_transparent: false
+      };
   doc.artboards.setActiveArtboardIndex(abNumber);
-
-  // Using "jpg" if present in image_format setting, else using "png";
-  if (contains(settings.image_format, 'jpg')) {
-    promoFormat = 'jpg';
-  } else {
-    promoFormat = 'png';
-  }
-
-  tmpPngTransparency = settings.png_transparent;
-  settings.png_transparent = "no";
-  exportImageFiles(imageDestination, artboard, [promoFormat], promoScale, "no");
-  settings.png_transparent = tmpPngTransparency;
-  alert("Promo image created\nLocation: " + imageDestination + "." + promoFormat);
+  exportImageFile(outputPath, artboard, format, opts);
+  alert("Promo image created\nLocation: " + outputPath);
 }
 
 // Create images for each artboard to use as fallback images for platforms that don't support html
 function createFallbackImages(settings) {
-  var format = contains(settings.image_format, 'jpg') ? 'jpg' : 'png'
-  forEachUsableArtboard(function(ab, abNumber) {
-    var dest = docPath + settings.html_output_path + 'fallback-' + makeKeyword(ab.name)
+  var format = contains(settings.image_format, 'jpg') ? 'jpg' : 'png';
+  var mode = settings.create_fallback_images;
+  if (mode === 'smallest' || mode === 'largest') {
+    var abNumber = mode === 'smallest' ? findSmallestArtboard() : findLargestArtboard();
+    var ab = doc.artboards[abNumber];
+    var dest = docPath + settings.html_output_path + 'fallback';
     doc.artboards.setActiveArtboardIndex(abNumber);
-    exportImageFiles(dest, ab, [format], 1, "yes");
-  })
+    exportImageFile(dest, ab, format, settings);
+  } else {
+    forEachUsableArtboard(function(ab, abNumber) {
+      var dest = docPath + settings.html_output_path + 'fallback-' + makeKeyword(ab.name);
+      doc.artboards.setActiveArtboardIndex(abNumber);
+      exportImageFile(dest, ab, format, settings);
+    })
+  }
 }
 
 // Returns 1 or 2 (corresponding to standard pixel scale and "retina" pixel scale)
 // format: png, png24 or jpg
 // doubleres: yes, always or no (no is default)
+//    yes may be overridden for large images on mobile
 function getOutputImagePixelRatio(width, height, format, doubleres) {
   // Maximum pixel sizes are based on mobile Safari limits
   // TODO: check to see if these numbers are still relevant
@@ -2950,58 +3010,55 @@ function getOutputImagePixelRatio(width, height, format, doubleres) {
   return k;
 }
 
+
 // Exports contents of active artboard as an image (without text, unless in test mode)
-//
-// dest: full path of output file excluding the file extension
+// imgPath: full path of output file
 // ab: assumed to be active artboard
-// formats: array of export format identifiers (png, png24, jpg)
-// initialScaling: the proportion to scale the base image before considering whether to double res. Usually just 1.
-// doubleres: "yes", "no" or "always" ("yes" may be overridden if the image is very large)
+// format: png, png24, jpg
 //
-function exportImageFiles(dest, ab, formats, initialScaling, doubleres) {
+function exportImageFile(imgPath, ab, format, settings) {
+  // This constant is specified in the Illustrator Scripting Reference under ExportOptionsJPEG.
+  var MAX_JPG_SCALE  = 776.19;
+  var abPos = convertAiBounds(ab.artboardRect);
+  var imageScale, exportOptions, fileType;
 
-  forEach(formats, function(format) {
-    var maxJpgScale  = 776.19; // This is specified in the Illustrator Scripting Reference under ExportOptionsJPEG.
-    var abPos = convertAiBounds(ab.artboardRect);
-    var width = abPos.width * initialScaling;
-    var height = abPos.height * initialScaling;
-    var imageScale = 100 * initialScaling * getOutputImagePixelRatio(width, height, format, doubleres);
-    var exportOptions, fileType;
+  if (settings.image_width) { // fixed width (used for promo image output)
+    imageScale = 100 * settings.image_width / abPos.width;
+  } else {
+    imageScale =  100 * getOutputImagePixelRatio(abPos.width, abPos.height, format, settings.use_2x_images_if_possible);
+  }
 
-    if (format=="png") {
-      fileType = ExportType.PNG8;
-      exportOptions = new ExportOptionsPNG8();
-      exportOptions.colorCount       = docSettings.png_number_of_colors;
-      exportOptions.transparency     = isTrue(docSettings.png_transparent);
+  if (format=="png") {
+    fileType = ExportType.PNG8;
+    exportOptions = new ExportOptionsPNG8();
+    exportOptions.colorCount       = settings.png_number_of_colors;
+    exportOptions.transparency     = isTrue(settings.png_transparent);
 
-    } else if (format=="png24") {
-      fileType = ExportType.PNG24;
-      exportOptions = new ExportOptionsPNG24();
-      exportOptions.transparency     = isTrue(docSettings.png_transparent);
+  } else if (format=="png24") {
+    fileType = ExportType.PNG24;
+    exportOptions = new ExportOptionsPNG24();
+    exportOptions.transparency     = isTrue(settings.png_transparent);
 
-    } else if (format=="jpg") {
-      if (imageScale > maxJpgScale) {
-        imageScale = maxJpgScale;
-        warnings.push(dest.split("/").pop() + ".jpg was output at a smaller size than desired because of a limit on jpg exports in Illustrator." +
-          " If the file needs to be larger, change the image format to png which does not appear to have limits.");
-      }
-      fileType = ExportType.JPEG;
-      exportOptions = new ExportOptionsJPEG();
-      exportOptions.qualitySetting = docSettings.jpg_quality;
-
-    } else {
-      if (format != "svg") { // svg exported separately
-        warnings.push("Unsupported image format: " + format);
-      }
-      return;
+  } else if (format=="jpg") {
+    if (imageScale > MAX_JPG_SCALE) {
+      imageScale = MAX_JPG_SCALE;
+      warnings.push(imgPath.split("/").pop() + " was output at a smaller size than desired because of a limit on jpg exports in Illustrator." +
+        " If the file needs to be larger, change the image format to png which does not appear to have limits.");
     }
+    fileType = ExportType.JPEG;
+    exportOptions = new ExportOptionsJPEG();
+    exportOptions.qualitySetting = settings.jpg_quality;
 
-    exportOptions.horizontalScale  = imageScale;
-    exportOptions.verticalScale    = imageScale;
-    exportOptions.artBoardClipping = true;
-    exportOptions.antiAliasing     = false;
-    app.activeDocument.exportFile(new File(dest), fileType, exportOptions);
-  });
+  } else {
+    warnings.push("Unsupported image format: " + format);
+    return;
+  }
+
+  exportOptions.horizontalScale  = imageScale;
+  exportOptions.verticalScale    = imageScale;
+  exportOptions.artBoardClipping = true;
+  exportOptions.antiAliasing     = false;
+  app.activeDocument.exportFile(new File(imgPath), fileType, exportOptions);
 }
 
 
@@ -3121,16 +3178,14 @@ function copyArtboardForImageExport(ab, masks, layers) {
   }
 }
 
-// Returns path of output SVG file, or null if no file was created
-function exportSVG(dest, ab, masks, layers) {
+// Returns true if a file was created or else false (because svg document was empty);
+function exportSVG(ofile, ab, masks, layers) {
   // Illustrator's SVG output contains all objects in a document (it doesn't
   //   clip to the current artboard), so we copy artboard objects to a temporary
   //   document for export.
   var exportDoc = copyArtboardForImageExport(ab, masks, layers);
   var opts = new ExportOptionsSVG();
-  var ofile = dest + '.svg';
-
-  if (!exportDoc) return null;
+  if (!exportDoc) return false;
 
   opts.embedAllFonts         = false;
   opts.fontSubsetting        = SVGFontSubsetting.None;
@@ -3149,21 +3204,24 @@ function exportSVG(dest, ab, masks, layers) {
   doc.activate();
   //exportDoc.pageItems.removeAll();
   exportDoc.close(SaveOptions.DONOTSAVECHANGES);
-  rewriteSVGFile(ofile);
-  return ofile;
+  return true;
 }
 
-function rewriteSVGFile(path) {
-  var file = new File(path);
-  if (!file.exists) return;
-  file.open("r");
-  var content = file.read();
-  file.close();
+function rewriteSVGFile(path, id) {
+  var svg = readFile(path);
+  var selector;
+  if (!svg) return;
+  // replace id created by Illustrator (relevant for inline SVG)
+  svg = svg.replace(/id="[^"]*"/, 'id="' + id + '"');
   // prevent SVG strokes from scaling
-  content = injectCSSinSVG(content, 'rect,circle,path,line,polyline { vector-effect: non-scaling-stroke; }');
+  // (add element id to selector to prevent inline SVG from affecting other SVG on the page)
+  selector = map('rect,circle,path,line,polyline'.split(','), function(name) {
+      return '#' + id + ' ' + name;
+    }).join(', ');
+  svg = injectCSSinSVG(svg, selector + ' { vector-effect: non-scaling-stroke; }');
   // remove images from filesystem and SVG file
-  content = removeImagesInSVG(content, path);
-  saveTextFile(path, content);
+  svg = removeImagesInSVG(svg, path);
+  saveTextFile(path, svg);
 }
 
 function removeImagesInSVG(content, path) {
@@ -3196,17 +3254,19 @@ function generateArtboardDiv(ab, breakpoints, settings) {
   var divId = nameSpace + getArtboardFullName(ab);
   var classnames = nameSpace + "artboard " + nameSpace + "artboard-v4";
   var widthRange = getArtboardWidthRange(ab);
+  var abPos = convertAiBounds(ab.artboardRect);
   var html = "";
   if (!isFalse(settings.include_resizer_classes)) {
     classnames += " " + findShowClassesForArtboard(ab, breakpoints);
   }
   html += '\t<div id="' + divId + '" class="' + classnames + '"';
+  html += ' data-aspect-ratio="' + roundTo(abPos.width / abPos.height, 3) + '"';
   if (isTrue(settings.include_resizer_widths)) {
     // add data-min/max-width attributes
     // TODO: see if we can use breakpoint data to set min and max widths
-    html += " data-min-width='" + widthRange[0] + "'";
+    html += ' data-min-width="' + widthRange[0] + '"';
     if (widthRange[1] < Infinity) {
-      html += " data-max-width='" + widthRange[1] + "'";
+      html +=  ' data-max-width="' + widthRange[1] + '"';
     }
   }
   html += ">\r";
@@ -3302,6 +3362,24 @@ function generateYamlFileContent(breakpoints, settings) {
     // this is the case of fixed responsiveness
     lines.push("max_width: " + getArtboardInfo().pop().effectiveWidth);
   }
+
+  // Include dimensions of the artboards
+  forEachUsableArtboard(function(ab, id) {
+    var info = convertAiBounds(ab.artboardRect);
+    var slug = makeKeyword(ab.name);
+    lines.push('artboard_' + slug + '_width: ' + info.width);
+    lines.push('artboard_' + slug + '_height: ' + info.height);
+  });
+
+  var fbmode = settings.create_fallback_images;
+  if(fbmode === 'smallest' || fbmode === 'largest') {
+    var abNumber = fbmode === 'smallest' ? findSmallestArtboard() : findLargestArtboard();
+    var ab = doc.artboards[abNumber];
+    var info = convertAiBounds(ab.artboardRect);
+    lines.push('fallback_image_width: ' + info.width);
+    lines.push('fallback_image_height: ' + info.height);
+  }
+
   return lines.join('\n') + '\n' + convertSettingsToYaml(settings) + '\n';
 }
 
@@ -3524,15 +3602,10 @@ function generateOutputHtml(content, pageName, settings) {
   saveTextFile(htmlFileDestination, textForFile);
 
   // process local preview template if appropriate
-  if (settings.local_preview_template) {
-    var tmplFile = docPath + settings.local_preview_template;
-    if (fileExists(tmplFile)) {
-      // TODO: may have missed a condition, need to compare with original version
-      var previewFileDestination = htmlFileDestinationFolder + pageName + ".preview.html";
-      outputLocalPreviewPage(textForFile, previewFileDestination, settings);
-    } else {
-      warnings.push('Can\'t find "' + tmplFile + '" needed to generate the preview.');
-    }
+  if (settings.local_preview_template !== "") {
+    // TODO: may have missed a condition, need to compare with original version
+    var previewFileDestination = htmlFileDestinationFolder + pageName + ".preview.html";
+    outputLocalPreviewPage(textForFile, previewFileDestination, settings);
   }
 }
 } // end main() function definition

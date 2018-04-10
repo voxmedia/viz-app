@@ -4,6 +4,7 @@ import path from 'path'
 import rmrf from 'rimraf'
 import fs from 'fs'
 import { slugify } from 'underscore.string'
+import yaml from 'js-yaml'
 
 import { dispatch, resetState } from './ipc'
 import state from './index'
@@ -87,14 +88,42 @@ export function openInIllustrator() {
 
 export function copyEmbedCode() {
   if ( !state.selectedProject ) return console.error('copyEmbedCode: No selected project!')
+
+  const projectPath = expandHomeDir(state.selectedProject.path)
+  const configFile = path.join(projectPath, 'src', 'config.yml')
+
+  if ( !fs.existsSync(configFile) ) {
+    errorDialog({
+      parentWin: state.mainWindow,
+      message: 'Project ai2html output is missing.\r\n\r\nRun ai2html from the File > Scripts menu in Illustrator, then try again.'
+    })
+    return console.error('copyEmbedCode: Missing config.yml for project!')
+  }
+
+  const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'))
   const p = state.selectedProject
   const slug = slugify(state.selectedProject.title)
   const deploy_url = `${state.data.Settings.deployBaseUrl}/${slug}/`
-  const fallback_img_url = `${deploy_url}fallback-mobile.png`
-  const fallback_img_width = 0
-  const fallback_img_height = 0
-  const height = 150
-  const resizable = true
+  const fallback_img_url = `${deploy_url}fallback.png`
+  const fallback_img_width = config.fallback_image_width
+  const fallback_img_height = config.fallback_image_height
+
+  // collect all the artboard heights from the config file
+  const heights = []
+  for ( let k in config ) {
+    const m = k.match(/^artboard_(.+)_height$/)
+    if (m) heights.push(config[k])
+  }
+
+  // if all the artboards are the same height, we can just set the height and
+  // disable the responsive resizable stuff, set the iframe height to the min height
+  let resizable = true
+  let height = 150
+  if (heights.length > 0) {
+    resizable = !heights.every(h => h === heights[0])
+    height = Math.min(...heights)
+  }
+
   const html = embedCode({
     slug,
     deploy_url,
