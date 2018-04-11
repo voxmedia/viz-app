@@ -10,7 +10,7 @@ const PROJECT_CONTEXT_MENU_TEMPLATE = [
   {label: 'Deploy', click() { deployProject() }},
   {type: 'separator'},
   {label: 'Remove from list', click() { removeFromList() }},
-  {label: 'Delete from servers', click() { removeFromServer() }},
+  //{label: 'Delete from servers', click() { removeFromServer() }},
   {label: 'Delete permanently', click() { deleteAll() }},
 ]
 

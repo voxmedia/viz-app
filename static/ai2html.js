@@ -73,7 +73,7 @@ var defaultBaseSettings = {
     notes: "Set this to 'all' to export an image of each artboard in addition to html output"
   },
   image_format: {
-    defaultValue: ["auto"],
+    defaultValue: ["jpg"],
     includeInSettingsBlock: true,
     includeInConfigFile: false,
     useQuoteMarksInConfigFile: false,

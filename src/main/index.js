@@ -1,15 +1,9 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
+import path from 'path'
 import Menubar from './menus/Menubar'
 import storage from './storage'
 import worker from './workers'
-
-/**
- * Set `__static` path to static files in production
- * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
- */
-if (process.env.NODE_ENV !== 'development') {
-  global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
-}
+import ipc from './ipc'
 
 const state = {
   ready: false,
@@ -18,7 +12,15 @@ const state = {
   selectedProject: null,
   data: null,
   quitting: false,
+  staticPath: null,
 }
+
+if (process.env.NODE_ENV !== 'development') {
+  state.staticPath = path.join(__dirname, 'static').replace(/\\/g, '\\\\')
+} else {
+  state.staticPath = path.join(__dirname, '..', '..', 'static').replace(/\\/g, '\\\\')
+}
+
 export default state
 
 const winURL = process.env.NODE_ENV === 'development'

@@ -8,8 +8,6 @@ const SAVE_FILENAME = 'autosave'
 const history = []
 let index = 0
 
-console.log(`App storage: ${storage.getDefaultDataPath()}`)
-
 function load(cb) {
   storage.get( SAVE_FILENAME, (error, data) => {
     if ( error ) {

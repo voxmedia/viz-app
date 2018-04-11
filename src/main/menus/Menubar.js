@@ -51,22 +51,24 @@ const MACOSX_MENUBAR_TEMPLATE = [
   },
 ]
 
-/** remove for production **/
-MACOSX_MENUBAR_TEMPLATE.push(
-  {
-    label: 'Dev',
-    submenu: [
-      {role: 'reload'},
-      {role: 'forcereload'},
-      {role: 'toggledevtools'},
-      {type: 'separator'},
-      {
-        label: 'Clear storage',
-        click() { clearState() }
-      },
-    ]
-  }
-)
+if (process.env.NODE_ENV === 'development') {
+  /** remove for production **/
+  MACOSX_MENUBAR_TEMPLATE.push(
+    {
+      label: 'Dev',
+      submenu: [
+        {role: 'reload'},
+        {role: 'forcereload'},
+        {role: 'toggledevtools'},
+        {type: 'separator'},
+        {
+          label: 'Clear storage',
+          click() { clearState() }
+        },
+      ]
+    }
+  )
+}
 
 MACOSX_MENUBAR_TEMPLATE.push(
   {

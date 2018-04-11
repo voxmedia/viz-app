@@ -4,7 +4,6 @@ import state from './index'
 import storage from './storage'
 import { newProject, deployProject, editSettings, installAi2html, openInIllustrator } from './actions'
 
-
 // Sync messages
 ipcMain.on( 'get-state', (eve) => {
   eve.returnValue = state.data

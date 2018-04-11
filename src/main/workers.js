@@ -1,16 +1,33 @@
+import fs from 'fs'
+import { app } from 'electron'
 import { fork } from 'child_process'
 import { join } from 'path'
 import EventEmitter from 'events'
-
-const workerPath = process.env.NODE_ENV === 'development'
-  ? join(__dirname, '..', '..', 'dist', 'electron', 'worker')
-  : join(__dirname, '..', 'worker')
+import state from './index'
 
 const WORKER_USE_LIMIT = 10
 
+let workerPath
+if ( process.env.NODE_ENV === 'development' ) {
+  workerPath = join(__dirname, '..', '..', 'dist', 'electron', 'worker')
+} else {
+  // When running in production, we have to copy the worker script to a different
+  // location to run. We can't fork it directly.
+  const asarPath = join(__dirname, 'worker.js')
+  workerPath = join(app.getPath('appData'), 'tmpworker.js')
+  fs.writeFileSync(workerPath, fs.readFileSync(asarPath))
+}
+
 function createWorker() {
-  console.log(`Forking worker from module ${workerPath}`)
-  const proc = fork( workerPath )
+  const workerForkOpts = {}
+  if ( process.env.NODE_ENV === 'development' ) {
+    workerForkOpts.env = Object.assign({ ELECTRON_STATIC: state.staticPath }, process.env)
+  } else {
+    // We also need to make sure it knows where the node_modules are
+    workerForkOpts.env = Object.assign({ ELECTRON_STATIC: state.staticPath, NODE_PATH: join(__dirname, '..', '..', 'node_modules') }, process.env)
+  }
+
+  const proc = fork( workerPath, [], workerForkOpts )
   const emitter = new EventEmitter()
   let status = 'new' // new, ready, working, dead
   let uses = 0
@@ -64,7 +81,10 @@ function createWorker() {
 }
 
 const WORKER_MAX = 5
-const workers = [createWorker()]
+const workers = []
+
+// state from index.js is undefined on load, so we have to wait till index.js runs
+setTimeout(() => { workers.push(createWorker()) }, 0)
 
 // Cleanup dead or broken workers
 function cleanup() {

@@ -5,6 +5,7 @@ import fs from 'fs'
 import template from 'gulp-template'
 import data from 'gulp-data'
 import rename from 'gulp-rename'
+import chmod from 'gulp-chmod'
 import yaml from 'js-yaml'
 import { slugify } from 'underscore.string'
 import { deploy } from 's3-deploy/src/deploy'
@@ -29,20 +30,25 @@ function projectBuild({ project, settings }) {
       }
     }
 
+    // files coming from the asar package have effed up permissions
     gulp.src(projectPath + '/ai2html-output/**/*.{png,jpeg,svg}')
+      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
       .pipe(gulp.dest(dest))
       .on('end', () => end())
       .on('error', (e) => end(e))
 
     gulp.src(projectPath + '/src/layout.ejs')
       .pipe(data(file => {
+        const configFile = path.join(projectPath, 'src', 'config.yml')
+        const contentFile = path.join(projectPath, 'ai2html-output', 'index.html')
         return {
-          config: yaml.safeLoad(fs.readFileSync(path.join(projectPath, 'src', 'config.yml'), 'utf8')),
-          content: fs.readFileSync(path.join(projectPath, 'ai2html-output', 'index.html'), 'utf8'),
+          config: yaml.safeLoad(fs.readFileSync(configFile, 'utf8')),
+          content: fs.readFileSync(contentFile, 'utf8'),
         }
       }))
       .pipe(template())
       .pipe(rename({extname: '.html', basename: 'index'}))
+      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
       .pipe(gulp.dest(dest))
       .on('end', () => end())
       .on('error', (e) => end(e))
@@ -85,7 +91,7 @@ export default function projectDeploy({ project, settings }) {
       bucket: settings.awsBucket, // needed for deleteRemoved
       cwd,
       filePrefix: `${settings.awsPrefix}/${slugify(project.title.trim())}`,
-      deleteRemoved: false,
+      deleteRemoved: false, // enabling this might delete everything in the bucket
     }
 
     const AWSOptions = {
@@ -100,13 +106,14 @@ export default function projectDeploy({ project, settings }) {
 
     const s3ClientOptions = {}
 
-    const files = glob.sync(path.join(cwd, '*.{jpg,png,svg,html}'))
-
     if ( settings.awsAccessKeyId ) process.env.AWS_ACCESS_KEY_ID = settings.awsAccessKeyId
     if ( settings.awsSecretAccessKey ) process.env.AWS_SECRET_ACCESS_KEY = settings.awsSecretAccessKey
 
     projectBuild({ project, settings })
-      .then(() => deploy(files, options, AWSOptions, s3Options, s3ClientOptions))
+      .then(() => {
+        const files = glob.sync(path.join(cwd, '*.{gif,jpg,png,svg,html}'))
+        return deploy(files, options, AWSOptions, s3Options, s3ClientOptions)
+      })
       .then(() => {
         resolve(project)
       }, err => {

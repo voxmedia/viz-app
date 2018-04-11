@@ -1,10 +1,15 @@
 import gulp from 'gulp'
 import rename from 'gulp-rename'
+import chmod from 'gulp-chmod'
 import fs from 'fs'
+import { expandHomeDir } from '../../lib'
+
+const __static = process.env.ELECTRON_STATIC
 
 export default function createProject({ project, settings }) {
   return new Promise((resolve, reject) => {
-    fs.mkdirSync(project.path)
+    const projectPath = expandHomeDir(project.path)
+    fs.mkdirSync(projectPath)
 
     const expected = 2
     const errors = []
@@ -19,12 +24,14 @@ export default function createProject({ project, settings }) {
 
     gulp.src(__static + '/project-template/template.ai')
       .pipe(rename({basename: project.title}))
-      .pipe(gulp.dest(project.path))
+      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
+      .pipe(gulp.dest(projectPath))
       .on('end', () => end())
       .on('error', (e) => end(e))
 
     gulp.src(__static + '/project-template/src/**')
-      .pipe(gulp.dest(project.path + '/src'))
+      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
+      .pipe(gulp.dest(projectPath + '/src'))
       .on('end', () => end())
       .on('error', (e) => end(e))
   })

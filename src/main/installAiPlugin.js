@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import {dialog} from 'electron'
-import {state} from './index'
+import state from './index'
 
 const PATHS = {
   'darwin': [
@@ -75,7 +75,7 @@ function findScriptsPath(appPath) {
 
 function copyScript(scriptsPath) {
   return new Promise((resolve, reject) => {
-    const src = path.join(__static, 'ai2html.js')
+    const src = path.join(state.staticPath, 'ai2html.js')
     const dest = path.join(scriptsPath, 'ai2html.js')
     fs.copyFile(src, dest, (err) => {
       if (err) return reject(err)

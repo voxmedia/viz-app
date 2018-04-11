@@ -20,7 +20,7 @@ export function newProject() {
   dialog.showSaveDialog(
     state.mainWindow,
     {
-      defaultPath: path.join(expandHomeDir(state.data.Settings.projectDir), 'My project'),
+      defaultPath: expandHomeDir(state.data.Settings.projectDir),
       nameFieldLabel: 'Project:', // TODO: why doesn't 'Project name:' display correctly?
       buttonLabel: 'Create'
     },
@@ -52,7 +52,7 @@ export function deployProject() {
   if ( !state.selectedProject ) return console.error('deployProject: No selected project!')
   const project = state.selectedProject
   dispatch( 'project_status', [project.id, 'deploying'] )
-  run('project_deploy', { project, settings: state.data.Settings, userData: app.getPath('userData') })
+  run('project_deploy', { project, settings: state.data.Settings })
     .then((p) => {
       dispatch( 'project_status', [project.id, 'deployed'] )
     }, (err) => {
@@ -63,20 +63,21 @@ export function deployProject() {
 
 export function openFolder() {
   if ( !state.selectedProject ) return console.error('openFolder: No selected project!')
-  const ppath = path.join(state.selectedProject.path, '')
-  if (fs.existsSync(ppath))
-    shell.openItem(ppath)
+  const projectPath = expandHomeDir(state.selectedProject.path)
+  if (fs.existsSync(projectPath))
+    shell.openItem(projectPath)
   else
     errorDialog({
       parentWin: state.mainWindow,
-      message: `Project folder is missing.\r\n\r\nIt should be here:\r\n${project.path}`
+      message: `Project folder is missing.\r\n\r\nIt should be here:\r\n${projectPath}`
     })
 }
 
 export function openInIllustrator() {
   if ( !state.selectedProject ) return console.error('openInIllustrator: No selected project!')
   const p = state.selectedProject
-  const filepath = path.join(p.path, `${p.title}.ai`)
+  const projectPath = expandHomeDir(state.selectedProject.path)
+  const filepath = path.join(projectPath, `${p.title}.ai`)
   if (fs.existsSync(filepath))
     shell.openItem(filepath)
   else
@@ -171,6 +172,7 @@ export function removeFromServer() {
 export function deleteAll() {
   const p = state.selectedProject
   if ( !p ) return console.error('deleteAll: No selected project!')
+  const projectPath = expandHomeDir(state.selectedProject.path)
 
   dialog.showMessageBox(
     state.mainWindow,
@@ -178,10 +180,10 @@ export function deleteAll() {
       buttons: ['Cancel', 'Delete all'],
       defaultId: 0,
       title: `Permanently delete ${p.title}`,
-      message: "This will delete the project from your hard drive and the internet; there is no undo!\r\n\r\nAre you sure you want to do this?",
+      message: "This will delete the project from your hard drive; there is no undo!\r\n\r\nAre you sure you want to do this?",
     }, (resp) => {
       if ( resp === 0 ) return
-      rmrf(p.path, (err) => {
+      rmrf(projectPath, (err) => {
         if (err) dispatch('project_error', [p.id, err.toString()])
         else dispatch('project_remove', p.id)
       })
