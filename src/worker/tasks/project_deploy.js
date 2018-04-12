@@ -31,7 +31,7 @@ function projectBuild({ project, settings }) {
     }
 
     // files coming from the asar package have effed up permissions
-    gulp.src(projectPath + '/ai2html-output/**/*.{png,jpeg,svg}')
+    gulp.src(projectPath + '/ai2html-output/**/*.{png,gif,jpg,jpeg,svg}')
       .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
       .pipe(gulp.dest(dest))
       .on('end', () => end())
