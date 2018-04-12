@@ -77,11 +77,11 @@ function copyScript(scriptsPath) {
   return new Promise((resolve, reject) => {
     const src = path.join(state.staticPath, 'ai2html.js')
     const dest = path.join(scriptsPath, 'ai2html.js')
-    fs.copyFile(src, dest, (err) => {
-      if (err) return reject(err)
-      console.log('ai2html.js installed')
-      resolve(dest)
-    })
+    // Can't use copyFile because of asar
+    const ws = fs.createWriteStream(dest)
+    fs.createReadStream(src).pipe(ws)
+    ws.on('error', err => reject(err))
+    ws.on('finish', () => resolve(dest))
   })
 }
 
