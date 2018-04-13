@@ -105,7 +105,7 @@ export function copyEmbedCode() {
   const p = state.selectedProject
   const slug = slugify(state.selectedProject.title)
   const deploy_url = `${state.data.Settings.deployBaseUrl}/${slug}/`
-  const fallback_img_url = `${deploy_url}fallback.png`
+  const fallback_img_url = `${deploy_url}fallback.${config.image_format == 'jpg' ? 'jpg' : 'png'}`
   const fallback_img_width = config.fallback_image_width
   const fallback_img_height = config.fallback_image_height
 

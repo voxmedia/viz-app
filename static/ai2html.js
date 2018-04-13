@@ -75,7 +75,7 @@ var defaultBaseSettings = {
   image_format: {
     defaultValue: ["jpg"],
     includeInSettingsBlock: true,
-    includeInConfigFile: false,
+    includeInConfigFile: true,
     useQuoteMarksInConfigFile: false,
     inputType: "array",
     possibleValues: "jpg, png, png24",

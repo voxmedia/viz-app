@@ -188,12 +188,11 @@
         var m = window.location.search.match(/parentUrl=(https[^&]+)/);
         if ( m && m.length === 2 ) {
           var pu = decodeURIComponent(m[1]);
-          var qs = document.querySelector('meta[property="og:url"]')
-          var fbt = qs('meta[property="og:url"]')
+          var fbt = document.querySelector('meta[property="og:url"]');
           if(fbt && fbt.content) fbt.content = pu;
-          var twt = qs('meta[name="twitter:url"]')
+          var twt = document.querySelector('meta[name="twitter:url"]');
           if(twt && twt.content) twt.content = pu;
-          var cn = qs('link[rel=canonical]')
+          var cn = document.querySelector('link[rel=canonical]');
           if(cn && cn.content) cn.href = pu;
         }
         r = true;
