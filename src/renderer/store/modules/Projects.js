@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon'
+
 const state = [
   // {
   //   id: 1,
@@ -34,6 +36,8 @@ const mutations = {
   PROJECT_STATUS ( state, [id, status] ) {
     const proj = state.find(p => p.id === id)
     proj.status = status
+    if ( status === 'deployed' )
+      proj.deployedDate = DateTime.local().toString()
   },
   PROJECT_ERROR ( state, [id, error] ) {
     const proj = state.find(p => p.id === id)

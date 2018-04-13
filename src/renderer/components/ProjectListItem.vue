@@ -8,7 +8,7 @@
     <div class="details">
       <h4 :title="project.title">{{ project.title }}</h4>
       <code :title="project.path">{{ project.path }}</code>
-      <small v-if="project.deployedDate">Last deployed {{ project.deployedDate }}</small>
+      <small v-if="displayDeployedDate">Last deployed {{ displayDeployedDate }}</small>
     </div>
     <div v-if="icon" class="status">
       <i class="icon" :class="icon" :title="statusTooltip"></i>
@@ -18,6 +18,7 @@
 
 <script>
 import { ipcRenderer } from 'electron'
+import { DateTime } from 'luxon'
 
 export default {
   name: 'project-list-item',
@@ -53,6 +54,11 @@ export default {
       let cls = ['project-list-item']
       if ( this.project.focus ) cls.push('focus')
       return cls
+    },
+    displayDeployedDate () {
+      const dt = DateTime.fromISO(this.project.deployedDate)
+      if ( dt.invalid ) return null
+      return dt.toFormat('EEE d MMM, t')
     },
   },
   methods: {
