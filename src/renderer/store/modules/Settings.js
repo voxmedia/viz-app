@@ -1,4 +1,8 @@
+import Vue from 'vue'
+
 const state = {
+  //  disableAi2htmlStartupCheck: false,
+  //  scriptInstallPath: null,
   //  projectDir: '/Users/ryanmark/Projects',
   //  deployBaseUrl: null,
   //  deployType: 's3',
@@ -12,6 +16,7 @@ const state = {
 const mutations = {
   SETTINGS_SET ( state, { key, val } ) {
     if ( key in state ) state[key] = val
+    else Vue.set(state, key, val)
   },
 }
 

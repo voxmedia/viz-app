@@ -39,8 +39,7 @@ function save(data) {
 }
 
 function pushState(newState) {
-  if ( isEqual( newState, state() ) )
-    return console.log('New state is identical to current state, ignoring')
+  if ( isEqual( newState, state() ) ) return;
 
   if ( index < history.length - 1 )
     history.splice( index + 1 )

@@ -1,6 +1,8 @@
 const state = {
   "Projects": [],
   "Settings": {
+    "disableAi2htmlStartupCheck": false,
+    "scriptInstallPath": null,
     "projectDir": process.platform === 'win32' ? "%HOMEPATH%\\Projects" : "~/Projects",
     "deployBaseUrl": null,
     "deployType": 's3',

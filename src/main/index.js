@@ -1,17 +1,18 @@
-import { app, BrowserWindow, Menu, ipcMain } from 'electron'
+import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron'
 import path from 'path'
 import Menubar from './menus/Menubar'
 import storage from './storage'
 import worker from './workers'
-import ipc from './ipc'
+import { dispatch } from './ipc'
+import { checkOnLaunch } from './installAiPlugin'
 
 const state = {
   ready: false,
+  quitting: false,
   mainWindow: null,
   settingsWindow: null,
   selectedProject: null,
   data: null,
-  quitting: false,
   staticPath: null,
 }
 
@@ -27,13 +28,14 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
-function appReady () {
+function appReady (launchInfo) {
   state.ready = true
   storage.load((error, data) => {
     state.data = data
     state.selectedProject = data.Projects.find(p => p.focus)
     createWindow()
     Menu.setApplicationMenu( Menubar() )
+
   })
 }
 
@@ -74,6 +76,8 @@ function createWindow () {
       state.mainWindow.hide()
     }
   })
+
+  state.mainWindow.once('show', () => checkOnLaunch())
 
   state.mainWindow.on('closed', () => state.mainWindow = null)
   state.mainWindow.on('ready-to-show', () => state.mainWindow.show())

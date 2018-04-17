@@ -2,6 +2,9 @@ import fs from 'fs'
 import path from 'path'
 import {dialog} from 'electron'
 import state from './index'
+import crypto from 'crypto'
+import { dispatch } from './ipc'
+import { alert, confirm, error, chooseFolder } from './dialogs'
 
 const PATHS = {
   'darwin': [
@@ -26,51 +29,37 @@ if ( process.platform === 'darwin' ) {
   SCRIPTS_DIR = 'Presets\\en_US\\Scripts'
 }
 
-let WIN = null
-
 function guessAppPath() {
-  return new Promise((resolve, reject) => {
-    if ( process.platform in PATHS ) {
-      let appPath = PATHS[process.platform].find((path) => fs.existsSync(path))
-      if ( appPath ) {
-        resolve(path.dirname(appPath))
-      } else {
-        reject()
-      }
+  if ( process.platform in PATHS ) {
+    let appPath = PATHS[process.platform].find((path) => fs.existsSync(path))
+    if ( appPath ) {
+      return Promise.resolve(path.dirname(appPath))
+    } else {
+      return Promise.reject()
     }
-  })
+  }
 }
 
-function chooseAppPath() {
-  return new Promise((resolve, reject) => {
-    dialog.showMessageBox(WIN, {
-      buttons: ['Cancel', 'Choose Illustrator Folder'],
-      defaultId: 1,
-      title: 'Choose Illustrator Folder',
-      message: "Can't find the Adobe Illustrator install location.\n\nClick 'Choose Illustrator Folder' to specify the install location yourself, or cancel installation.",
-    }, (resp) => {
-      if ( resp === 0 ) return reject()
-      dialog.showOpenDialog(WIN, {
+function chooseAppPath(parentWin) {
+  const message = "Can't find the Adobe Illustrator install location.\n\nClick 'Choose Illustrator Folder' to specify the install location yourself, or cancel installation."
+  return confirm({parentWin, message, confirmLabel: 'Choose Illustrator Folder'})
+    .then(() => {
+      return chooseFolder({
+        parentWin,
         title: 'Choose Illustrator Folder',
         defaultPath: DEFAULT_PROGRAMS_DIR,
-        properties: ['openDirectory',],
-      }, (filePaths) => {
-        resolve(filePaths[0])
       })
     })
-  })
 }
 
 function findScriptsPath(appPath) {
   const scriptsPath = path.join(appPath, SCRIPTS_DIR)
-  console.log(`scriptsPath: ${scriptsPath}`)
-  return new Promise((resolve, reject) => {
-    if ( !fs.existsSync(scriptsPath) || !fs.statSync(scriptsPath).isDirectory() ) {
-      console.error("Can't find Adobe Illustrator scripts folder. Looked here: ", scriptsPath)
-      return reject(new Error('Adobe Illustrator Scripts folder is missing.'))
-    }
-    resolve(scriptsPath)
-  })
+
+  if ( !fs.existsSync(scriptsPath) || !fs.statSync(scriptsPath).isDirectory() ) {
+    console.error("Can't find Adobe Illustrator scripts folder. Looked here: ", scriptsPath)
+    return Promise.reject(new Error('Adobe Illustrator Scripts folder is missing.'))
+  }
+  return Promise.resolve(scriptsPath)
 }
 
 function copyScript(scriptsPath) {
@@ -79,34 +68,85 @@ function copyScript(scriptsPath) {
     const dest = path.join(scriptsPath, 'ai2html.js')
     // Can't use copyFile because of asar
     const ws = fs.createWriteStream(dest)
-    fs.createReadStream(src).pipe(ws)
-    ws.on('error', err => reject(err))
+    ws.on('error', reject)
     ws.on('finish', () => resolve(dest))
+    fs.createReadStream(src).pipe(ws)
   })
 }
 
-export default function installAiPlugin() {
-  const cb = arguments[arguments.length-1]
-  WIN = arguments.length > 1 && arguments[0] ? arguments[0] : null
-  guessAppPath()
-    .then(findScriptsPath)
-    .catch(() => chooseAppPath().then(findScriptsPath))
-    .then(copyScript)
-    .then((path) => {
-      dialog.showMessageBox(WIN, {
-        title: 'Install complete',
-        message: `The ai2html script has been installed.`,
+function calcHash(filename, type='sha1') {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash(type)
+    hash.on('readable', () => {
+      const data = hash.read()
+      if ( data ) resolve(data.toString('hex'))
+    })
+    hash.on('error', reject)
+    fs.createReadStream(filename).pipe(hash)
+  })
+}
+
+function isInstalled() {
+  const installPath = state.data.Settings.scriptInstallPath
+  return Promise.resolve(installPath && fs.existsSync(installPath))
+}
+
+function isUpdated() {
+  const installPath = state.data.Settings.scriptInstallPath
+  if ( ! fs.existsSync(installPath) ) return Promise.resolve(null)
+  return calcHash(installPath).then((installedHash) => AI2HTML_HASH === installedHash)
+}
+
+export function install({parentWin = null, forceInstall = false} = {}) {
+  const startupCheck = state.data.Settings.disableAi2htmlStartupCheck
+  const installPath = state.data.Settings.scriptInstallPath
+
+  Promise.all([isInstalled(), isUpdated()])
+    .then(([installed, updated]) => {
+      let verb
+      if(!installed) verb = 'Install'
+      else if (installed && !updated) verb = 'Update'
+      else if (forceInstall) verb = 'Reinstall'
+      else return;
+
+      dialog.showMessageBox(parentWin, {
+        type: 'question',
+        title: `${verb} ai2html`,
+        message: `Would you like to ${verb.toLowerCase()} ai2html?`,
+        defaultId: 1,
+        buttons: ['No', `${verb} ai2html`],
+        checkboxLabel: "Always check on startup",
+        checkboxChecked: !startupCheck,
+      }, (res, checkboxChecked) => {
+        dispatch('set', {key: 'disableAi2htmlStartupCheck', val: !checkboxChecked})
+
+        if ( res === 0 ) return;
+
+        if (!installed) {
+          guessAppPath()
+            .then(findScriptsPath)
+            .catch(() => chooseAppPath(parentWin).then(findScriptsPath))
+            .then(copyScript)
+            .then((path) => {
+              alert({parentWin, message: 'The ai2html script has been installed.'})
+              dispatch('set', {key: 'scriptInstallPath', val: path})
+            }, (err) => {
+              error({parentWin, message: 'The ai2html script install failed.', details: err.toString()})
+            })
+        } else {
+          copyScript(path.dirname(installPath))
+            .then(() => {
+              alert({parentWin, message: 'The ai2html script has been installed.'})
+            }, (err) => {
+              error({parentWin, message: 'The ai2html script install failed.', details: err.toString()})
+            })
+        }
       })
-      WIN = null
-      if ( cb ) cb(true)
+
     })
-    .catch((err) => {
-      if ( err )
-        dialog.showMessageBox(WIN, {
-          title: 'Install failed',
-          message: `The ai2html script install failed.\n\n${err.toString()}`,
-        })
-      WIN = null
-      if ( cb ) cb(false)
-    })
+}
+
+export function checkOnLaunch() {
+  if ( state.data.Settings.disableAi2htmlStartupCheck === true ) return;
+  install()
 }

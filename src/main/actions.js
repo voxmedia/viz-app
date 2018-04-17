@@ -8,9 +8,9 @@ import yaml from 'js-yaml'
 
 import { dispatch, resetState } from './ipc'
 import state from './index'
-import installAiPlugin from './installAiPlugin'
+import { install } from './installAiPlugin'
 import { run } from './workers'
-import { errorDialog } from './error'
+import { error } from './dialogs'
 import storage from './storage'
 import embedCode from './embedCode'
 
@@ -57,7 +57,7 @@ export function deployProject() {
       dispatch( 'project_status', [project.id, 'deployed'] )
     }, (err) => {
       dispatch( 'project_error', [project.id, err] )
-      errorDialog({parentWin: state.mainWindow, message: err})
+      error({parentWin: state.mainWindow, message: err})
     })
 }
 
@@ -67,7 +67,7 @@ export function openFolder() {
   if (fs.existsSync(projectPath))
     shell.openItem(projectPath)
   else
-    errorDialog({
+    error({
       parentWin: state.mainWindow,
       message: `Project folder is missing.\r\n\r\nIt should be here:\r\n${projectPath}`
     })
@@ -81,7 +81,7 @@ export function openInIllustrator() {
   if (fs.existsSync(filepath))
     shell.openItem(filepath)
   else
-    errorDialog({
+    error({
       parentWin: state.mainWindow,
       message: `Illustrator file is missing.\r\n\r\nIt should be here:\r\n${filepath}`
     })
@@ -94,7 +94,7 @@ export function copyEmbedCode() {
   const configFile = path.join(projectPath, 'src', 'config.yml')
 
   if ( !fs.existsSync(configFile) ) {
-    errorDialog({
+    error({
       parentWin: state.mainWindow,
       message: 'Project ai2html output is missing.\r\n\r\nRun ai2html from the File > Scripts menu in Illustrator, then try again.'
     })
@@ -163,7 +163,7 @@ export function removeFromServer() {
           dispatch( 'project_status', [project.id, 'new'] )
         }, (err) => {
           dispatch( 'project_error', [project.id, err] )
-          errorDialog({parentWin: state.mainWindow, message: err})
+          error({parentWin: state.mainWindow, message: err})
         })
     }
   )
@@ -238,10 +238,8 @@ export function editSettings() {
   });
 }
 
-export function installAi2html(win) {
-  installAiPlugin(win, (success) => {
-    console.log(`Install plugin status: ${success ? 'installed' : 'failed'}`)
-  })
+export function installAi2html(parentWin) {
+  install({parentWin, forceInstall: true})
 }
 
 export function clearState() {

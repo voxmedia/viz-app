@@ -5,6 +5,8 @@ process.env.BABEL_ENV = 'main'
 const path = require('path')
 const { dependencies } = require('../package.json')
 const webpack = require('webpack')
+const crypto = require('crypto')
+const fs = require('fs')
 
 const BabiliWebpackPlugin = require('babili-webpack-plugin')
 
@@ -69,5 +71,11 @@ if (process.env.NODE_ENV === 'production') {
     })
   )
 }
+
+mainConfig.plugins.push(
+  new webpack.DefinePlugin({
+    'AI2HTML_HASH': `"${crypto.createHash('sha1').update(fs.readFileSync(path.join(__dirname, '../static/ai2html.js'))).digest('hex')}"`
+  })
+)
 
 module.exports = mainConfig
