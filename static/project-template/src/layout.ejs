@@ -206,7 +206,10 @@
         height: document.body.scrollHeight
       }, '*');
     }
-    document.addEventListener("DOMContentLoaded", u);
+    document.addEventListener("DOMContentLoaded", function() {
+      if ( navigator.userAgent.indexOf('iPhone') > 0 ) setTimeout(u, 500);
+      else u();
+    });
     window.addEventListener("resize", function() {
       if(t) clearTimeout(t);
       t = setTimeout(u, 200);
