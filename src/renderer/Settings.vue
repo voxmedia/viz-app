@@ -1,5 +1,5 @@
 <template>
-  <div id="settings">
+  <div id="settings" @drop="handleDrop" @dragover="handleDragOver">
     <toolbar>{{settingsLabel}}</toolbar>
     <settings-form :settings="$store.state.Settings"></settings-form>
   </div>
@@ -16,6 +16,16 @@
       settingsLabel() {
         return process.platform === 'darwin' ? 'Preferences' : 'Settings'
       }
+    },
+    methods: {
+      handleDrop (eve) {
+        this.$emit('drop', eve)
+        eve.preventDefault()
+      },
+      handleDragOver (eve) {
+        this.$emit('dragover', eve)
+        eve.preventDefault()
+      },
     }
   }
 </script>

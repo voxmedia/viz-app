@@ -2,7 +2,7 @@ import { ipcMain, BrowserWindow } from 'electron'
 import ProjectContextMenu from './menus/ProjectContextMenu'
 import state from './index'
 import storage from './storage'
-import { newProject, deployProject, editSettings, installAi2html, openInIllustrator } from './actions'
+import { newProject, addProjects, deployProject, editSettings, installAi2html, openInIllustrator } from './actions'
 
 // Sync messages
 ipcMain.on( 'get-state', (eve) => {
@@ -50,6 +50,10 @@ ipcMain.on( 'store-mutate', (eve, arg) => {
 
 ipcMain.on( 'new-project', (eve, arg) => {
   newProject()
+} )
+
+ipcMain.on( 'add-projects', (eve, arg) => {
+  addProjects(arg)
 } )
 
 ipcMain.on( 'deploy-project', (eve, arg) => {

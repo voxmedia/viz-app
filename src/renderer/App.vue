@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" @drop="handleDrop" @dragover="handleDragOver">
     <toolbar @click="handleToolbarClick">
       Vizier
       <template slot="left">
@@ -36,6 +36,14 @@
       },
       handleToolbarClick (eve) {
         this.$store.dispatch('project_blur')
+      },
+      handleDrop (eve) {
+        this.$emit('drop', eve)
+        eve.preventDefault()
+      },
+      handleDragOver (eve) {
+        this.$emit('dragover', eve)
+        eve.preventDefault()
       },
     },
     computed: {

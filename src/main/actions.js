@@ -27,25 +27,82 @@ export function newProject() {
     (filename) => {
       if ( !filename ) return
 
-      const project = {
-        id: uuid(),
-        title: path.basename(filename),
-        path: compactHomeDir(filename),
-        status: "new",
-        deployedDate: null,
-        errorMessage: null,
-        focus: false,
+      addProjects([filename])
+    })
+}
+
+export function addProjects(filenames) {
+  for ( const filename of filenames ) {
+    const title = path.basename(filename)
+    const ppath = compactHomeDir(filename)
+
+    if ( fs.existsSync(filename) ) {
+      const stats = fs.statSync(filename)
+      if ( !stats.isDirectory() ) {
+        return error({
+          parentWin: state.mainWindow,
+          message: `This type of file is not supported`,
+          details: `File was ${filename}`,
+        })
       }
 
+      if ( !fs.existsSync(path.join(filename, 'src')) ) {
+        return error({
+          parentWin: state.mainWindow,
+          message: `This is not a project folder`,
+          details: `Folder was ${filename}`,
+        })
+      }
+    }
+
+    const dupe = state.data.Projects.find(p => {
+      return slugify(p.title) === slugify(title) || p.path === ppath
+    })
+
+    if ( dupe ) {
+      return error({
+        parentWin: state.mainWindow,
+        message: `There is already a project with the name ${title}`
+      })
+    }
+  }
+
+  for ( const filename of filenames ) {
+    const project = {
+      id: uuid(),
+      title: path.basename(filename),
+      path: compactHomeDir(filename),
+      status: "new",
+      deployedDate: null,
+      errorMessage: null,
+      focus: false,
+    }
+
+    dispatch( 'project_create', project )
+
+    if ( !fs.existsSync(filename) ) {
       run('project_create', { project, settings: state.data.Settings })
         .then((p) => {
           console.log("Project created successfully!")
         }, (err) => {
           dispatch( 'project_error', [project.id, err.toString()] )
         })
+    }
+  }
+}
 
-      dispatch( 'project_create', project )
-    })
+export function openProject() {
+  dialog.showOpenDialog(
+    state.mainWindow,
+    {
+      defaultPath: expandHomeDir(state.data.Settings.projectDir),
+      message: 'Select an existing project folder to add.',
+      properties: [ 'openDirectory', 'multiSelections' ]
+  }, (filePaths) => {
+    if (!filePaths || filePaths.length === 0) return;
+
+    addProjects(filePaths)
+  })
 }
 
 export function deployProject() {

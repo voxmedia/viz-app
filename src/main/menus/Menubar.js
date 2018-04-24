@@ -1,5 +1,5 @@
 import {app, Menu, shell} from 'electron'
-import { newProject, editSettings, installAi2html, clearState } from '../actions'
+import { newProject, openProject, editSettings, installAi2html, clearState } from '../actions'
 import state from '../index'
 import storage from '../storage'
 
@@ -25,6 +25,7 @@ const MACOSX_MENUBAR_TEMPLATE = [
     label: 'File',
     submenu: [
       {label: 'New', accelerator: "CmdOrCtrl+N", click(eve) { newProject() }},
+      {label: 'Open', accelerator: "CmdOrCtrl+O", click(eve) { openProject() }},
     ]
   },
   /** remove for production **/

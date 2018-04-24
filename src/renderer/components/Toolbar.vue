@@ -1,5 +1,5 @@
 <template>
-  <nav class="toolbar" @click="handleClick">
+  <nav class="toolbar" @click="handleClick" @drop="handleDrop" @dragover="handleDragOver">
     <div class="title-bar" v-if="isMac()"><slot>Vizier</slot></div>
     <div class="tools" v-if="hasToolSlots">
       <div><slot name="left"></slot></div>
@@ -15,6 +15,14 @@
     methods: {
       handleClick (eve) {
         this.$emit('click', eve)
+      },
+      handleDrop (eve) {
+        this.$emit('drop', eve)
+        eve.preventDefault()
+      },
+      handleDragOver (eve) {
+        this.$emit('dragover', eve)
+        eve.preventDefault()
       },
     },
     computed: {
