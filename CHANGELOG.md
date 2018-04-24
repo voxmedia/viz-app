@@ -1,5 +1,9 @@
 # Changelog for Viz.app
 
+## 1.0.0-beta.2
+
+* Safari bugfixes for the embed. changes in layout.ejs
+
 ## 1.0.0-beta.1
 
 * Inital release
