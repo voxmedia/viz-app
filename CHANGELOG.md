@@ -1,5 +1,15 @@
 # Changelog for Viz.app
 
+## 1.0.0-beta.3
+
+* Support for opening existing projects
+* Drag project folders to the project list to add a project
+* Added Mac OS X menu option File -> Open
+* Add validation to make sure no projects are created or added with and existing
+  title or project path
+* Handle accidental drag and drops to other parts of the GUI
+* Enable autoupdate through S3
+
 ## 1.0.0-beta.2
 
 * Safari bugfixes for the embed. changes in layout.ejs
