@@ -1,6 +1,6 @@
 {
   "name": "vizier",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "author": "Ryan Mark <ryan.mark@voxmedia.com>",
   "description": "Create, manage and publish ai2html projects",
   "license": "BSD-3-Clause",
