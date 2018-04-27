@@ -1,5 +1,9 @@
 # Changelog for Viz.app
 
+## 1.0.0-beta.4
+
+* Fix deploy not updating html files sometimes
+
 ## 1.0.0-beta.3
 
 * Support for opening existing projects
