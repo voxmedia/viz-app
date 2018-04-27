@@ -50,14 +50,14 @@
     },
     "publish": [
       {
-        "provider": "github",
-        "owner": "voxmedia",
-        "repo": "viz-app"
-      },
-      {
         "provider": "s3",
         "bucket": "apps.voxmedia.com",
         "path": "vizapp"
+      },
+      {
+        "provider": "github",
+        "owner": "voxmedia",
+        "repo": "viz-app"
       }
     ]
   },
