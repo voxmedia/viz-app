@@ -3,7 +3,7 @@
 process.env.BABEL_ENV = 'main'
 
 const path = require('path')
-const { dependencies } = require('../package.json')
+const { dependencies, version } = require('../package.json')
 const webpack = require('webpack')
 const crypto = require('crypto')
 const fs = require('fs')
@@ -72,9 +72,14 @@ if (process.env.NODE_ENV === 'production') {
   )
 }
 
+let channel = 'latest'
+if ( version.indexOf('beta') >= 0 ) channel = 'beta'
+else if (version.indexOf('alpha') >= 0 ) channel = 'alpha'
+
 mainConfig.plugins.push(
   new webpack.DefinePlugin({
-    'AI2HTML_HASH': `"${crypto.createHash('sha1').update(fs.readFileSync(path.join(__dirname, '../static/ai2html.js'))).digest('hex')}"`
+    'AI2HTML_HASH': `"${crypto.createHash('sha1').update(fs.readFileSync(path.join(__dirname, '../static/ai2html.js'))).digest('hex')}"`,
+    'AUTOUPDATE_CHANNEL': `"${channel}"`
   })
 )
 

@@ -30,6 +30,7 @@
   "build": {
     "productName": "Vizier",
     "appId": "com.voxmedia.vizier",
+    "generateUpdatesFilesForAllChannels": true,
     "directories": {
       "output": "build"
     },

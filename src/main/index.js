@@ -106,5 +106,11 @@ app.on('activate', () => {
 import { autoUpdater } from 'electron-updater'
 
 app.on('ready', () => {
-  if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdatesAndNotify()
+  if (process.env.NODE_ENV === 'production') {
+    // This is supposedly unnecessary. But it doesn't work without it.
+    autoUpdater.channel = AUTOUPDATE_CHANNEL
+    autoUpdater.setFeedURL('https://apps.voxmedia.com/vizapp/')
+
+    autoUpdater.checkForUpdatesAndNotify()
+  }
 })
