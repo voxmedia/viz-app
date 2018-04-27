@@ -8,7 +8,7 @@ import rename from 'gulp-rename'
 import chmod from 'gulp-chmod'
 import yaml from 'js-yaml'
 import { slugify } from 'underscore.string'
-import { deploy } from 's3-deploy/src/deploy'
+import { deploy } from '../../lib/s3deploy'
 
 import { expandHomeDir } from '../../lib'
 
