@@ -3,6 +3,7 @@
 ## 1.0.0-beta.4
 
 * Fix deploy not updating html files sometimes
+* Add custom icon
 
 ## 1.0.0-beta.3
 
