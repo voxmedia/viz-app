@@ -1,23 +1,25 @@
 #!/bin/bash
 
-rm 1024x1024.png
-rm 512x512.png
-rm 256x256.png
-rm 128x128.png
-rm 64x64.png
-rm 32x32.png
-rm 16x16.png
+set -e
 
-cp Icon1024.png 1024x1024.png
+rm -f 1024x1024.png
+rm -f 512x512.png
+rm -f 256x256.png
+rm -f 128x128.png
+rm -f 64x64.png
+rm -f 32x32.png
+rm -f 16x16.png
 
-convert Icon1024.png -resize 16x16   16x16.png
-convert Icon1024.png -resize 32x32   32x32.png
-convert Icon1024.png -resize 64x64   64x64.png
-convert Icon1024.png -resize 128x128 128x128.png
-convert Icon1024.png -resize 256x256 256x256.png
-convert Icon1024.png -resize 512x512 512x512.png
+cp IconLarge.png 1024x1024.png
 
-rm icon.icns
+convert IconSmall.png -resize 16x16   16x16.png
+convert IconSmall.png -resize 32x32   32x32.png
+convert IconLarge.png -resize 64x64   64x64.png
+convert IconLarge.png -resize 128x128 128x128.png
+convert IconLarge.png -resize 256x256 256x256.png
+convert IconLarge.png -resize 512x512 512x512.png
+
+rm -f icon.icns
 rm -Rf icon.iconset
 mkdir icon.iconset
 
@@ -34,3 +36,6 @@ cp 1024x1024.png icon.iconset/icon_512x512@2x.png
 
 iconutil -c icns icon.iconset
 rm -R icon.iconset
+
+rm icon.ico
+convert 16x16.png 32x32.png 64x64.png 128x128.png 256x256.png icon.ico
