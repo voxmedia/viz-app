@@ -1,10 +1,11 @@
 import {app, Menu, shell} from 'electron'
-import { openInIllustrator, openFolder, copyEmbedCode, deployProject, removeFromList, removeFromServer, deleteAll } from '../actions'
+import { openInIllustrator, openFolder, copyEmbedCode, copyLink, deployProject, removeFromList, removeFromServer, deleteAll } from '../actions'
 
 const PROJECT_CONTEXT_MENU_TEMPLATE = [
   {label: 'Open in Illustrator', click() { openInIllustrator() }},
   {label: 'Open folder', click() { openFolder() }},
   {label: 'Copy embed code', click() { copyEmbedCode() }},
+  {label: 'Copy link', click() { copyLink() }},
   {type: 'separator'},
   //{label: 'Edit', click() { console.log('edit clicked') }},
   {label: 'Deploy', click() { deployProject() }},

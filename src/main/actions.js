@@ -194,6 +194,18 @@ export function copyEmbedCode() {
   clipboard.writeText(html, 'text/html')
 }
 
+export function copyLink() {
+  if ( !state.selectedProject ) return console.error('copyLink: No selected project!')
+  const project = state.selectedProject
+  if ( project.status !== 'deployed') {
+    error({parentWin: state.mainWindow, message: 'Project has not been deployed.\r\n\r\nDeploy the project before attempting to copy the link'})
+    return console.error('copyLink: The project has not been deployed.')
+  }
+  const slug = slugify(state.selectedProject.title)
+  const deploy_url = `${state.data.Settings.deployBaseUrl}/${slug}`
+  clipboard.writeText(deploy_url, 'text/html')
+}
+
 export function removeFromList() {
   if ( !state.selectedProject ) return console.error('removeFromList: No selected project!')
   dispatch('project_remove', state.selectedProject.id)
