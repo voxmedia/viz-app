@@ -29,10 +29,12 @@ export default function createProject({ project, settings }) {
       .on('end', () => end())
       .on('error', (e) => end(e))
 
+    /*
     gulp.src(__static + '/project-template/src/**')
       .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
       .pipe(gulp.dest(projectPath + '/src'))
       .on('end', () => end())
       .on('error', (e) => end(e))
+    */
   })
 }
