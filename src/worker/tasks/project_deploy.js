@@ -10,7 +10,8 @@ import yaml from 'js-yaml'
 import { slugify } from 'underscore.string'
 import { deploy } from '../../lib/s3deploy'
 
-import { expandHomeDir } from '../../lib'
+import { expandHomeDir, getStaticPath } from '../../lib'
+import renderEmbedCode from '../../lib/embed_code'
 
 function projectBuild({ project, settings }) {
   return new Promise((resolve, reject) => {
@@ -37,17 +38,39 @@ function projectBuild({ project, settings }) {
       .on('end', () => end())
       .on('error', (e) => end(e))
 
-    gulp.src(projectPath + '/src/layout.ejs')
+    const configFile = path.join(projectPath, 'src', 'config.yml')
+    const contentFile = path.join(projectPath, 'ai2html-output', 'index.html')
+
+    // Template data
+    const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'))
+    const content = fs.readFileSync(contentFile, 'utf8')
+    const embed_code = renderEmbedCode({ project, settings })
+
+    let indexTmpl = path.join(projectPath, 'src', 'layout.ejs')
+    if ( !fs.existsSync(indexTmpl) )
+      indexTmpl = path.join(getStaticPath(), 'project-template', 'src', 'layout.ejs')
+
+    gulp.src(indexTmpl)
       .pipe(data(file => {
-        const configFile = path.join(projectPath, 'src', 'config.yml')
-        const contentFile = path.join(projectPath, 'ai2html-output', 'index.html')
-        return {
-          config: yaml.safeLoad(fs.readFileSync(configFile, 'utf8')),
-          content: fs.readFileSync(contentFile, 'utf8'),
-        }
+        return { config, content, project }
       }))
       .pipe(template())
       .pipe(rename({extname: '.html', basename: 'index'}))
+      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
+      .pipe(gulp.dest(dest))
+      .on('end', () => end())
+      .on('error', (e) => end(e))
+
+    let previewTmpl = path.join(projectPath, 'src', 'preview.ejs')
+    if ( !fs.existsSync(previewTmpl) )
+      previewTmpl = path.join(getStaticPath(), 'project-template', 'src', 'preview.ejs')
+
+    gulp.src(previewTmpl)
+      .pipe(data(file => {
+        return { config, embed_code, project }
+      }))
+      .pipe(template())
+      .pipe(rename({extname: '.html', basename: 'preview'}))
       .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
       .pipe(gulp.dest(dest))
       .on('end', () => end())
@@ -106,8 +129,10 @@ export default function projectDeploy({ project, settings }) {
 
     const s3ClientOptions = {}
 
-    if ( settings.awsAccessKeyId ) process.env.AWS_ACCESS_KEY_ID = settings.awsAccessKeyId
-    if ( settings.awsSecretAccessKey ) process.env.AWS_SECRET_ACCESS_KEY = settings.awsSecretAccessKey
+    if ( settings.awsAccessKeyId )
+      process.env.AWS_ACCESS_KEY_ID = settings.awsAccessKeyId
+    if ( settings.awsSecretAccessKey )
+      process.env.AWS_SECRET_ACCESS_KEY = settings.awsSecretAccessKey
 
     projectBuild({ project, settings })
       .then(() => {

@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 
 import modules from './modules'
-import ipcPlugin from './ipcPlugin'
+import ipcPlugin from './ipc_plugin'
 
 Vue.use(Vuex)
 

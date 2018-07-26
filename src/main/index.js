@@ -4,7 +4,8 @@ import Menubar from './menus/Menubar'
 import storage from './storage'
 import worker from './workers'
 import { dispatch } from './ipc'
-import { checkOnLaunch } from './installAiPlugin'
+import { checkOnLaunch } from './install_ai_plugin'
+import { getStaticPath } from '../lib'
 
 const state = {
   ready: false,
@@ -13,13 +14,7 @@ const state = {
   settingsWindow: null,
   selectedProject: null,
   data: null,
-  staticPath: null,
-}
-
-if (process.env.NODE_ENV !== 'development') {
-  state.staticPath = path.join(__dirname, 'static').replace(/\\/g, '\\\\')
-} else {
-  state.staticPath = path.join(__dirname, '..', '..', 'static').replace(/\\/g, '\\\\')
+  staticPath: getStaticPath(),
 }
 
 export default state

@@ -1,18 +1,30 @@
-const homedir = process.env[(process.platform == 'win32') ? 'HOMEPATH' : 'HOME'];
+import path from 'path'
+
+const HOMEDIR = process.env[process.platform == 'win32' ? 'HOMEPATH' : 'HOME']
+
 export function expandHomeDir (p) {
   if (!p) return p;
   if (process.platform == 'win32') {
-    return p.replace('%HOMEPATH%', homedir)
+    return p.replace('%HOMEPATH%', HOMEDIR)
   } else {
-    return p.replace(/^~\//, `${homedir}/`)
+    return p.replace(/^~\//, `${HOMEDIR}/`)
   }
 }
 
 export function compactHomeDir (p) {
   if (!p) return p;
   if (process.platform == 'win32') {
-    return p.replace(homedir, '%HOMEPATH%')
+    return p.replace(HOMEDIR, '%HOMEPATH%')
   } else {
-    return p.replace(homedir, '~')
+    return p.replace(HOMEDIR, '~')
   }
+}
+
+export function getStaticPath() {
+  let ret
+  if (process.env.NODE_ENV !== 'development')
+    ret = path.join(__dirname, 'static')
+  else
+    ret = path.join(__dirname, '..', '..', 'static')
+  return ret.replace(/\\/g, '\\\\')
 }

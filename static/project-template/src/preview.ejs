@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Preview: <%=config.headline || project.title %></title>
+  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+
+  <style type="text/css">
+    @font-face{
+      font-family: "Balto";
+      src: url('https://fonts.voxmedia.com/unison/vox/webfonts/baltoweb-book.woff') format('woff'),
+           url('https://fonts.voxmedia.com/unison/vox/webfonts/baltoweb-book.woff2') format('woff2');
+      font-weight:400;
+      font-style:normal;
+    }
+
+    body {
+      font-family:Balto, Helvetica, Arial, sans-serif;
+      background-color:#1f1f23;
+      color: #efefef;
+      font-size:18px;
+      margin:0;
+    }
+    textarea {
+      position:absolute;
+      width:1px; height:1px;
+      bottom:0;
+      left:0;
+    }
+    .hide { display:none; }
+    .body-wrap {
+      display:flex;
+      justify-content:center;
+      flex-direction:column;
+      align-items:center;
+    }
+    .dimensions {
+      font-size:12px;
+      line-height:1.5;
+      text-shadow:-1px -1px 0 black;
+      text-align:center;
+      color:#bbb;
+      display:flex;
+      justify-content:center;
+    }
+    .dimensions > div { margin:0 1rem; }
+    .dimensions span { color:white; }
+    nav {
+      border:1px solid #2e2e2e;
+      background-color:#151516;
+      margin:1.5rem 1rem;
+      display:flex;
+      justify-content:center;
+      box-shadow:0 2px 10px black;
+    }
+    main {
+      margin:1.5rem 0;
+      border:1px solid #2e2e2e;
+      background-color: white;
+      box-shadow:0 2px 10px black;
+      overflow:auto;
+      padding:0 16px;
+      box-sizing:border-box;
+      resize:both;
+      min-width:322px;
+    }
+    button {
+      -webkit-appearance:none;
+      -moz-appearance:none;
+      display:inline-block;
+      cursor:pointer;
+      line-height:normal;
+      color:#ccc;
+      background-color:#151516;
+      text-align:center;
+      padding:0.5rem 1rem;
+
+      border:1px solid #2e2e2e;
+    }
+    button:not(.disabled):hover,
+    button:not(.disabled):focus,
+    button:not([disabled]):hover,
+    button:not([disabled]):focus {
+      color:white;
+      background-color:#151516;
+    }
+
+    button[disabled],
+    button.disabled {
+      cursor: default;
+      opacity:0.8;
+    }
+    p {
+      line-height:27px;
+      margin:0 0 21.6px;
+      color: rgb(76, 78, 77);
+    }
+    p:last-child { margin-bottom:0; }
+  </style>
+</head>
+<body>
+  <div class="body-wrap">
+    <nav>
+      <button onclick="javascript:setPreset('mobile')">Mobile</button>
+      <button onclick="javascript:setPreset('desktop')">Desktop</button>
+      <button onclick="javascript:copyEmbedCode()">Copy embed code</button>
+    </nav>
+    <div class="dimensions">
+      <div>Viewport: <span class="browser-window">&emdash; x &emdash;</span></div>
+      <div>Graphic/artboard width: <span class="graphic-width">&emdash;</span></div>
+    </div>
+    <main>
+      <p>Expedita perspiciatis eaque corporis dicta nesciunt debitis quod. Quos atque fugit nam quibusdam cum Consequuntur.</p>
+      <p><%=embed_code %></p>
+      <p>Dolor sit praesentium sint hic doloremque vero. Eos delectus perferendis facere cum voluptatum asperiores nostrum?</p>
+    </main>
+  </div>
+
+  <textarea id="embedcode" class="hide" readonly><%=embed_code %></textarea>
+
+  <script>
+    var PRESETS = {
+      'mobile': [320, 480],
+      'desktop': [771.917, 700],
+    }
+
+    function setPreset(preset) {
+      if ( preset in PRESETS )
+        setSize(PRESETS[preset][0], PRESETS[preset][1])
+      else
+        setSize('auto')
+    }
+
+    function setSize(width, height) {
+      if ( !height ) height = 'auto'
+      updateDimensionsDisplay()
+
+      var main = document.querySelector('main')
+      main.style.width = width == 'auto' ? width : (width + 2) + 'px'
+      main.style.height = height == 'auto' ? height : (height + 2) + 'px'
+    }
+
+    function updateDimensionsDisplay() {
+      var main = document.querySelector('main')
+      var borderWidth = 1
+      var gutterWidth = 16
+      var height = main.offsetHeight - (2*borderWidth)
+      var width = main.offsetWidth - (2*borderWidth)
+      var dim = document.querySelector('.dimensions .browser-window')
+      dim.innerText = width + ' x ' + height
+      var dim = document.querySelector('.dimensions .graphic-width')
+      dim.innerText = (width - 2*gutterWidth) + 'px'
+    }
+
+    function copyEmbedCode() {
+      var ele = document.getElementById('embedcode')
+      ele.className = ''
+      ele.focus()
+      ele.select()
+      try {
+        var successful = document.execCommand('copy');
+        if ( successful == 'unsuccessful' )
+          console.error('Unable to copy')
+      } catch (err) {
+        console.error('Unable to copy', err)
+      }
+      ele.className = 'hide'
+    }
+
+    document.querySelector('main')
+      .addEventListener('DOMAttrModified', function(e){ updateDimensionsDisplay() }, false);
+
+    setPreset('mobile')
+
+  </script>
+</body>
+</html>

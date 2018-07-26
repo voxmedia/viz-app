@@ -4,17 +4,16 @@ import path from 'path'
 import rmrf from 'rimraf'
 import fs from 'fs'
 import { slugify } from 'underscore.string'
-import yaml from 'js-yaml'
 
 import { dispatch, resetState } from './ipc'
 import state from './index'
-import { install } from './installAiPlugin'
+import { install } from './install_ai_plugin'
 import { run } from './workers'
 import { error } from './dialogs'
 import storage from './storage'
-import embedCode from './embedCode'
 
 import { expandHomeDir, compactHomeDir } from '../lib'
+import renderEmbedCode from '../lib/embed_code'
 
 export function newProject() {
   dialog.showSaveDialog(
@@ -144,57 +143,29 @@ export function openInIllustrator() {
     })
 }
 
-export function copyEmbedCode() {
-  if ( !state.selectedProject ) return console.error('copyEmbedCode: No selected project!')
-
-  const projectPath = expandHomeDir(state.selectedProject.path)
-  const configFile = path.join(projectPath, 'src', 'config.yml')
-
-  if ( !fs.existsSync(configFile) ) {
-    error({
-      parentWin: state.mainWindow,
-      message: 'Project ai2html output is missing.\r\n\r\nRun ai2html from the File > Scripts menu in Illustrator, then try again.'
-    })
-    return console.error('copyEmbedCode: Missing config.yml for project!')
-  }
-
-  const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'))
-  const p = state.selectedProject
+export function openPreview() {
   const slug = slugify(state.selectedProject.title)
-  const deploy_url = `${state.data.Settings.deployBaseUrl}/${slug}/`
-  const fallback_img_url = `${deploy_url}fallback.${config.image_format == 'jpg' ? 'jpg' : 'png'}`
-  const fallback_img_width = config.fallback_image_width
-  const fallback_img_height = config.fallback_image_height
-
-  // collect all the artboard heights from the config file
-  const heights = []
-  for ( let k in config ) {
-    const m = k.match(/^artboard_(.+)_height$/)
-    if (m) heights.push(config[k])
-  }
-
-  // if all the artboards are the same height, we can just set the height and
-  // disable the responsive resizable stuff, set the iframe height to the min height
-  let resizable = true
-  let height = 150
-  if (heights.length > 0) {
-    resizable = !heights.every(h => h === heights[0])
-    height = Math.min(...heights)
-  }
-
-  const html = embedCode({
-    slug,
-    deploy_url,
-    fallback_img_url,
-    fallback_img_width,
-    fallback_img_height,
-    height,
-    resizable
-  }).replace(/\s+/g, ' ').trim()
-  clipboard.writeText(html, 'text/html')
+  const deployUrl = `${state.data.Settings.deployBaseUrl}/${slug}/preview.html`
+  shell.openExternal(deployUrl)
 }
 
-export function copyLink() {
+export function copyEmbedCode() {
+  try {
+    clipboard.writeText(
+      renderEmbedCode({project: state.selectedProject, settings: state.data.Settings}),
+      'text/html')
+  } catch(e) {
+    console.error('copyEmbedCode: ' + e.message)
+    if ( e.message == 'Missing project config.yml' ) {
+      error({
+        parentWin: state.mainWindow,
+        message: 'Project ai2html output is missing.\r\n\r\nRun ai2html from the File > Scripts menu in Illustrator, then try again.'
+      })
+    }
+  }
+}
+
+export function copyPreviewLink() {
   if ( !state.selectedProject ) return console.error('copyLink: No selected project!')
   const project = state.selectedProject
   if ( project.status !== 'deployed') {
@@ -202,8 +173,8 @@ export function copyLink() {
     return console.error('copyLink: The project has not been deployed.')
   }
   const slug = slugify(state.selectedProject.title)
-  const deploy_url = `${state.data.Settings.deployBaseUrl}/${slug}`
-  clipboard.writeText(deploy_url, 'text/html')
+  const deployUrl = `${state.data.Settings.deployBaseUrl}/${slug}/preview.html`
+  clipboard.writeText(deployUrl, 'text/html')
 }
 
 export function removeFromList() {

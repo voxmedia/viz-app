@@ -79,6 +79,7 @@
     "js-yaml": "^3.11.0",
     "lodash": "^4.17.10",
     "luxon": "^1.0.0",
+    "mime": "^1",
     "rimraf": "^2.6.2",
     "underscore.string": "^3.3.4",
     "uuid": "^3.2.1",

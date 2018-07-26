@@ -1,4 +1,9 @@
-const state = {
+/*
+ * This data object is loaded as the application state.data on first run, or if
+ * the saved application state is removed. Is a useful reference for the
+ * state.data schema.
+ */
+const data = {
   "Projects": [],
   "Settings": {
     "disableAi2htmlStartupCheck": false,
@@ -14,8 +19,9 @@ const state = {
   }
 }
 
+// if we're running in dev mode, provide some dummy projects for testing
 if (process.env.NODE_ENV === 'development')
-  state.Projects = [
+  data.Projects = [
     {
       "id": 1,
       "title": "My project",
@@ -99,4 +105,4 @@ if (process.env.NODE_ENV === 'development')
     }
   ]
 
-export default state
+export default data

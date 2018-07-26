@@ -5,29 +5,43 @@ import { join } from 'path'
 import EventEmitter from 'events'
 import state from './index'
 
+// How many workers can we have at once
+const WORKER_MAX = 5
+// How many times can we use a worker process?
 const WORKER_USE_LIMIT = 10
+// An array to hold the worker objects
+const WORKERS = []
+// Path to the worker js script
+let WORKER_PATH
 
-let workerPath
+// Figure out the WORKER_PATH
 if ( process.env.NODE_ENV === 'development' ) {
-  workerPath = join(__dirname, '..', '..', 'dist', 'electron', 'worker')
+  WORKER_PATH = join(__dirname, '..', '..', 'dist', 'electron', 'worker')
 } else {
   // When running in production, we have to copy the worker script to a different
   // location to run. We can't fork it directly.
   const asarPath = join(__dirname, 'worker.js')
-  workerPath = join(app.getPath('appData'), 'tmpworker.js')
-  fs.writeFileSync(workerPath, fs.readFileSync(asarPath))
+  WORKER_PATH = join(app.getPath('appData'), 'tmpworker.js')
+  fs.writeFileSync(WORKER_PATH, fs.readFileSync(asarPath))
 }
 
 function createWorker() {
   const workerForkOpts = {}
   if ( process.env.NODE_ENV === 'development' ) {
-    workerForkOpts.env = Object.assign({ ELECTRON_STATIC: state.staticPath }, process.env)
+    workerForkOpts.env = Object.assign(
+      {
+        ELECTRON_STATIC: state.staticPath
+      }, process.env)
   } else {
     // We also need to make sure it knows where the node_modules are
-    workerForkOpts.env = Object.assign({ ELECTRON_STATIC: state.staticPath, NODE_PATH: join(__dirname, '..', '..', 'node_modules') }, process.env)
+    workerForkOpts.env = Object.assign(
+      {
+        ELECTRON_STATIC: state.staticPath,
+        NODE_PATH: join(__dirname, '..', '..', 'node_modules')
+      }, process.env)
   }
 
-  const proc = fork( workerPath, [], workerForkOpts )
+  const proc = fork( WORKER_PATH, [], workerForkOpts )
   const emitter = new EventEmitter()
   let status = 'new' // new, ready, working, dead
   let uses = 0
@@ -80,20 +94,17 @@ function createWorker() {
   }
 }
 
-const WORKER_MAX = 5
-const workers = []
-
 // state from index.js is undefined on load, so we have to wait till index.js runs
-setTimeout(() => { workers.push(createWorker()) }, 0)
+setTimeout(() => { WORKERS.push(createWorker()) }, 0)
 
 // Cleanup dead or broken workers
 function cleanup() {
   const idx = []
-  for(let i=0; i < workers.length; i++) {
-    if (!workers[i].is('dead', 'error')) continue;
+  for(let i=0; i < WORKERS.length; i++) {
+    if (!WORKERS[i].is('dead', 'error')) continue;
     idx.push(i)
   }
-  idx.forEach(i => workers.splice(i, 1))
+  idx.forEach(i => WORKERS.splice(i, 1))
 }
 
 // Send a job to a worker to be run
@@ -101,13 +112,13 @@ export function run(name, payload) {
   cleanup()
 
   // Look for a worker to send this job to
-  for(let i=0; i < workers.length; i++) {
-    const worker = workers[i]
+  for(let i=0; i < WORKERS.length; i++) {
+    const worker = WORKERS[i]
     if (worker.is('ready')) return worker.run(name, payload)
   }
 
   // We didn't find an availble worker, spawn a new one
-  if (workers.length < WORKER_MAX) workers.push(createWorker())
+  if (WORKERS.length < WORKER_MAX) WORKERS.push(createWorker())
 
   // Retry this job in 400-600 ms
   return new Promise((resolve, reject) => {

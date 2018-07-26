@@ -1,6 +1,6 @@
 import storage from 'electron-json-storage'
 import isEqual from 'lodash/isequal'
-import defaultData from './defaultState'
+import defaultData from './default_data'
 
 const HISTORY_MAX = 20
 const SAVE_FILENAME = 'autosave'
