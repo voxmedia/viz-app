@@ -172,7 +172,7 @@ var defaultBaseSettings = {
     notes: "This is ignored in env=nyt."
   },
   config_file_path: {
-    defaultValue: "src/config.yml",
+    defaultValue: "config.yml",
     includeInSettingsBlock: false,
     includeInConfigFile: false,
     useQuoteMarksInConfigFile: false,

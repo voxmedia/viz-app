@@ -20,7 +20,7 @@ function projectBuild({ project, settings }) {
 
     if (!fs.existsSync(dest)) fs.mkdirSync(dest)
 
-    const expected = 2
+    const expected = 3
     const errors = []
     let count = 0
     function end(error) {
@@ -38,7 +38,10 @@ function projectBuild({ project, settings }) {
       .on('end', () => end())
       .on('error', (e) => end(e))
 
-    const configFile = path.join(projectPath, 'src', 'config.yml')
+    const configFile = path.join(projectPath, 'config.yml')
+    if ( !fs.existsSync(configFile) )
+      throw new Error('Missing project config.yml')
+
     const contentFile = path.join(projectPath, 'ai2html-output', 'index.html')
 
     // Template data
@@ -46,9 +49,7 @@ function projectBuild({ project, settings }) {
     const content = fs.readFileSync(contentFile, 'utf8')
     const embed_code = renderEmbedCode({ project, settings })
 
-    let indexTmpl = path.join(projectPath, 'src', 'layout.ejs')
-    if ( !fs.existsSync(indexTmpl) )
-      indexTmpl = path.join(getStaticPath(), 'project-template', 'src', 'layout.ejs')
+    const indexTmpl = path.join(getStaticPath(), 'project-template', 'src', 'layout.ejs')
 
     gulp.src(indexTmpl)
       .pipe(data(file => {
@@ -61,9 +62,7 @@ function projectBuild({ project, settings }) {
       .on('end', () => end())
       .on('error', (e) => end(e))
 
-    let previewTmpl = path.join(projectPath, 'src', 'preview.ejs')
-    if ( !fs.existsSync(previewTmpl) )
-      previewTmpl = path.join(getStaticPath(), 'project-template', 'src', 'preview.ejs')
+    const previewTmpl = path.join(getStaticPath(), 'project-template', 'src', 'preview.ejs')
 
     gulp.src(previewTmpl)
       .pipe(data(file => {

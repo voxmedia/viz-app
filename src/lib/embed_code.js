@@ -39,7 +39,7 @@ const embedCodeTmpl = template(`
 
 export default function renderEmbedCode({project, settings}) {
   const projectPath = expandHomeDir(project.path)
-  const configFile = path.join(projectPath, 'src', 'config.yml')
+  const configFile = path.join(projectPath, 'config.yml')
 
   if ( !fs.existsSync(configFile) )
     throw new Error('Missing project config.yml')

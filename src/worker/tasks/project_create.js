@@ -9,7 +9,7 @@ export default function createProject({ project, settings }) {
     const projectPath = expandHomeDir(project.path)
     fs.mkdirSync(projectPath)
 
-    const expected = 2
+    const expected = 1
     const errors = []
     let count = 0
     function end(error) {
