@@ -22,7 +22,9 @@ export function compactHomeDir (p) {
 
 export function getStaticPath() {
   let ret
-  if (process.env.NODE_ENV !== 'development')
+  if (process.env.ELECTRON_STATIC)
+    return process.env.ELECTRON_STATIC
+  else if (process.env.NODE_ENV !== 'development')
     ret = path.join(__dirname, 'static')
   else
     ret = path.join(__dirname, '..', '..', 'static')

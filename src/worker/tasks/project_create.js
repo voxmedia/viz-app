@@ -2,9 +2,7 @@ import gulp from 'gulp'
 import rename from 'gulp-rename'
 import chmod from 'gulp-chmod'
 import fs from 'fs'
-import { expandHomeDir } from '../../lib'
-
-const __static = process.env.ELECTRON_STATIC
+import { expandHomeDir, getStaticPath } from '../../lib'
 
 export default function createProject({ project, settings }) {
   return new Promise((resolve, reject) => {
@@ -22,7 +20,7 @@ export default function createProject({ project, settings }) {
       }
     }
 
-    gulp.src(__static + '/project-template/template.ai')
+    gulp.src(getStaticPath() + '/project-template/template.ai')
       .pipe(rename({basename: project.title}))
       .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
       .pipe(gulp.dest(projectPath))
@@ -30,7 +28,7 @@ export default function createProject({ project, settings }) {
       .on('error', (e) => end(e))
 
     /*
-    gulp.src(__static + '/project-template/src/**')
+    gulp.src(getStaticPath() + '/project-template/src/**')
       .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
       .pipe(gulp.dest(projectPath + '/src'))
       .on('end', () => end())
