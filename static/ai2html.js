@@ -67,7 +67,7 @@ var defaultBaseSettings = {
     notes: ""
   },
   create_fallback_images: {
-    defaultValue: "smallest",
+    defaultValue: "all",
     includeInSettingsBlock: false,
     includeInConfigFile: false,
     useQuoteMarksInConfigFile: false,
@@ -3833,12 +3833,15 @@ function generateYamlFileContent(breakpoints, settings) {
   }
 
   // Include dimensions of the artboards
+  var artboardSlugs = []
   forEachUsableArtboard(function(ab, id) {
     var info = convertAiBounds(ab.artboardRect);
     var slug = makeKeyword(ab.name);
+    artboardSlugs.push(slug)
     lines.push('artboard_' + slug + '_width: ' + info.width);
     lines.push('artboard_' + slug + '_height: ' + info.height);
   });
+  lines.push('artboards: "' + artboardSlugs.join(',') + '"')
 
   var fbmode = settings.create_fallback_images;
   if(fbmode === 'smallest' || fbmode === 'largest') {
