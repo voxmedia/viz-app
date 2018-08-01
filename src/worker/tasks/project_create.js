@@ -1,6 +1,4 @@
-import gulp from 'gulp'
-import rename from 'gulp-rename'
-import chmod from 'gulp-chmod'
+import path from 'path'
 import fs from 'fs'
 import { expandHomeDir, getStaticPath } from '../../lib'
 
@@ -20,19 +18,9 @@ export default function createProject({ project, settings }) {
       }
     }
 
-    gulp.src(getStaticPath() + '/project-template/template.ai')
-      .pipe(rename({basename: project.title}))
-      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
-      .pipe(gulp.dest(projectPath))
-      .on('end', () => end())
-      .on('error', (e) => end(e))
-
-    /*
-    gulp.src(getStaticPath() + '/project-template/src/**')
-      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
-      .pipe(gulp.dest(projectPath + '/src'))
-      .on('end', () => end())
-      .on('error', (e) => end(e))
-    */
+    fs.copyFile(
+      path.join(getStaticPath(), 'template.ai'),
+      path.join(projectPath, project.title + '.ai'),
+      end)
   })
 }

@@ -1,16 +1,12 @@
-import gulp from 'gulp'
 import glob from 'glob'
 import path from 'path'
 import fs from 'fs'
-import template from 'gulp-template'
-import data from 'gulp-data'
-import rename from 'gulp-rename'
-import chmod from 'gulp-chmod'
-import yaml from 'js-yaml'
 import { slugify } from 'underscore.string'
-import { deploy } from '../../lib/s3deploy'
+//import { deploy } from '../../lib/s3deploy'
+import s3 from 's3-client-control'
+import cp from 'glob-copy'
 
-import { expandHomeDir, getStaticPath } from '../../lib'
+import { expandHomeDir, getStaticPath, getEmbedMeta, getProjectConfig, render } from '../../lib'
 import renderEmbedCode from '../../lib/embed_code'
 
 function projectBuild({ project, settings }) {
@@ -31,49 +27,42 @@ function projectBuild({ project, settings }) {
       }
     }
 
-    // files coming from the asar package have effed up permissions
-    gulp.src(projectPath + '/ai2html-output/**/*.{png,gif,jpg,jpeg,svg}')
-      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
-      .pipe(gulp.dest(dest))
-      .on('end', () => end())
-      .on('error', (e) => end(e))
-
-    const configFile = path.join(projectPath, 'config.yml')
-    if ( !fs.existsSync(configFile) )
-      throw new Error('Missing project config.yml')
+    const src = path.join(
+      projectPath,
+      'ai2html-output',
+      '*.{gif,jpg,png,svg,jpeg,json,mp4,mp3,webm,webp}'
+    )
+    cp(src, dest, end)
 
     const contentFile = path.join(projectPath, 'ai2html-output', 'index.html')
 
     // Template data
-    const config = yaml.safeLoad(fs.readFileSync(configFile, 'utf8'))
+    const slug = slugify(project.title)
+    const deploy_url = `${settings.deployBaseUrl}/${slug}/`
+    const config = getProjectConfig(project)
     const content = fs.readFileSync(contentFile, 'utf8')
     const embed_code = renderEmbedCode({ project, settings })
+    const embed_meta = getEmbedMeta(config)
 
-    const indexTmpl = path.join(getStaticPath(), 'project-template', 'src', 'layout.ejs')
+    fs.writeFile(
+      path.join(dest, 'index.html'),
+      render('embed.html.ejs', { config, content, project, embed_meta.fallbacks, slug, deploy_url }),
+      end)
 
-    gulp.src(indexTmpl)
-      .pipe(data(file => {
-        return { config, content, project }
-      }))
-      .pipe(template())
-      .pipe(rename({extname: '.html', basename: 'index'}))
-      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
-      .pipe(gulp.dest(dest))
-      .on('end', () => end())
-      .on('error', (e) => end(e))
+    fs.writeFile(
+      path.join(dest, 'preview.html'),
+      render('preview.html.ejs', { config, embed_code, project, embed_meta.fallbacks, slug, deploy_url }),
+      end)
 
-    const previewTmpl = path.join(getStaticPath(), 'project-template', 'src', 'preview.ejs')
+    fs.writeFile(
+      path.join(dest, 'embed.js'),
+      render('embed.js.ejs', { id: slug + '__graphic', url: deploy_url }),
+      end)
 
-    gulp.src(previewTmpl)
-      .pipe(data(file => {
-        return { config, embed_code, project }
-      }))
-      .pipe(template())
-      .pipe(rename({extname: '.html', basename: 'preview'}))
-      .pipe(chmod(0o644, 0o755)) // make sure dirs have x bit
-      .pipe(gulp.dest(dest))
-      .on('end', () => end())
-      .on('error', (e) => end(e))
+    fs.writeFile(
+      path.join(dest, 'oembed.json'),
+      render('oembed.json.ejs', { config, embed_code, project, embed_meta.fallbacks, slug, deploy_url }),
+      end)
   })
 }
 
@@ -108,35 +97,30 @@ export default function projectDeploy({ project, settings }) {
     if (!fs.existsSync(path.join(projectPath, 'ai2html-output')))
       return reject('Project ai2html output is missing.\r\n\r\nRun ai2html from the File > Scripts menu in Illustrator, then try again.')
 
-    const cwd = path.join(projectPath, 'build')
-    const options = {
-      bucket: settings.awsBucket, // needed for deleteRemoved
-      cwd,
-      filePrefix: `${settings.awsPrefix}/${slugify(project.title.trim())}`,
-      deleteRemoved: false, // enabling this might delete everything in the bucket
-    }
+    const localDir = path.join(projectPath, 'build')
 
-    const AWSOptions = {
-      region: settings.awsRegion || process.env.AWS_REGION
-    }
+    const client = s3.createClient({
+      s3Options: {
+        region: settings.awsRegion || process.env.AWS_REGION,
+        accessKeyId: settings.awsAccessKeyId || process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: settings.awsSecretAccessKey || process.env.AWS_SECRET_ACCESS_KEY,
+      }
+    })
 
-    const s3Options = {
+    const s3Params = {
       Bucket: settings.awsBucket,
-      ContentEncoding: 'gzip',
-      CacheControl: 'max-age=60'
+      Prefix: `${settings.awsPrefix}/${slugify(project.title.trim())}`,
+      CacheControl: 'max-age=60',
+      ACL: 'public-read'
     }
-
-    const s3ClientOptions = {}
-
-    if ( settings.awsAccessKeyId )
-      process.env.AWS_ACCESS_KEY_ID = settings.awsAccessKeyId
-    if ( settings.awsSecretAccessKey )
-      process.env.AWS_SECRET_ACCESS_KEY = settings.awsSecretAccessKey
 
     projectBuild({ project, settings })
       .then(() => {
-        const files = glob.sync(path.join(cwd, '*.{gif,jpg,png,svg,html}'))
-        return deploy(files, options, AWSOptions, s3Options, s3ClientOptions)
+        return new Promise((resolve, reject) => {
+          const uploader = client.uploadDir({ localDir, s3Params })
+          uploader.on('error', (err) => reject(err))
+          uploader.on('end', () => resolve())
+        })
       })
       .then(() => {
         resolve(project)

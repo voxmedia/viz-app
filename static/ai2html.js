@@ -3432,17 +3432,23 @@ function createPromoImage(settings) {
 function createFallbackImages(settings) {
   var format = contains(settings.image_format, 'jpg') ? 'jpg' : 'png';
   var mode = settings.create_fallback_images;
+  var opts = {
+        image_width: settings.promo_image_width || 1024,
+        jpg_quality: settings.jpg_quality,
+        png_number_of_colors: settings.png_number_of_colors,
+        png_transparent: false
+      };
   if (mode === 'smallest' || mode === 'largest') {
     var abNumber = mode === 'smallest' ? findSmallestArtboard() : findLargestArtboard();
     var ab = doc.artboards[abNumber];
     var dest = docPath + settings.html_output_path + 'fallback';
     doc.artboards.setActiveArtboardIndex(abNumber);
-    exportImageFile(dest, ab, format, settings);
+    exportRasterImage(dest, ab, format, opts);
   } else {
     forEachUsableArtboard(function(ab, abNumber) {
       var dest = docPath + settings.html_output_path + 'fallback-' + makeKeyword(ab.name);
       doc.artboards.setActiveArtboardIndex(abNumber);
-      exportImageFile(dest, ab, format, settings);
+      exportRasterImage(dest, ab, format, opts);
     })
   }
 }
