@@ -46,12 +46,12 @@ function projectBuild({ project, settings }) {
 
     fs.writeFile(
       path.join(dest, 'index.html'),
-      render('embed.html.ejs', { config, content, project, embed_meta.fallbacks, slug, deploy_url }),
+      render('embed.html.ejs', { config, content, project, embed_meta, slug, deploy_url }),
       end)
 
     fs.writeFile(
       path.join(dest, 'preview.html'),
-      render('preview.html.ejs', { config, embed_code, project, embed_meta.fallbacks, slug, deploy_url }),
+      render('preview.html.ejs', { config, embed_code, project, embed_meta, slug, deploy_url }),
       end)
 
     fs.writeFile(
@@ -61,7 +61,7 @@ function projectBuild({ project, settings }) {
 
     fs.writeFile(
       path.join(dest, 'oembed.json'),
-      render('oembed.json.ejs', { config, embed_code, project, embed_meta.fallbacks, slug, deploy_url }),
+      render('oembed.json.ejs', { config, embed_code, project, embed_meta, slug, deploy_url }),
       end)
   })
 }

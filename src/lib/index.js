@@ -79,9 +79,7 @@ export function getProjectConfig(project) {
   return yaml.safeLoad(fs.readFileSync(configFile, 'utf8'))
 }
 
-const TEMPLATES = []
-export function render(tmpl, data) {
-  if ( !TEMPLATES[tmpl] )
-    TEMPLATES[tmpl] = template(fs.readFileSync(path.join(getStaticPath(), 'templates', tmpl), 'utf8'))
-  return TEMPLATES[tmpl](Object.assign({render}, data))
+export function render(templateName, data) {
+  const tmpl = template(fs.readFileSync(path.join(getStaticPath(), 'templates', templateName), 'utf8'))
+  return tmpl(Object.assign({render}, data))
 }

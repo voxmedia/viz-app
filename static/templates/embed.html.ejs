@@ -2,51 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
   <title><%=config.headline || project.title%></title>
 
-  <meta name="viewport" content="width=device-width, user-scalable=no" />
   <meta name="description" content="<%=config.leadin%>" />
-
-  <meta property="fb:app_id" content="1477830955774082" />
-  <meta property="og:site_name" content="Vox.com" />
-  <meta property="og:type" content="article" />
-  <meta property="og:title" content="<%=config.headline || project.title%>" />
-  <meta property="og:image" content="<%=deploy_url + fallbacks[0].name %>" />
-  <meta property="og:description" content="<%=config.leadin%>" />
-  <meta property="og:url" content="" />
 
   <meta name="author" content="<%=config.credit%>" />
 
-  <meta property="article:publisher" content="https://www.facebook.com/Vox" />
-
-  <meta name="twitter:site" content="@voxdotcom" />
-  <meta property="twitter:account_id" content="2347049341" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image:src" content="<%=deploy_url + fallbacks[0].name %>" />
-  <meta name="twitter:image:width" content="<%=fallbacks[0].width%>" />
-  <meta name="twitter:image:height" content="<%=fallbacks[0].height%>" />
-  <meta name="twitter:url" content="" />
-  <meta name="twitter:title" content="<%=config.headline || project.title%>" />
-  <meta name="twitter:description" content="<%=config.leadin%>" />
-
-  <link rel="iframely reader" type="application/javascript"
-        id="<%=slug%>__graphic"
-        href="<%=deploy_url %>embed.js" title="<%=config.headline || project.title%>" />
-
-  <% for(var i = 0; i < fallbacks.length; i++) { %>
-  <link rel="iframely thumbnail" type="<%=fallbacks[i].mime %>"
-        href="<%=deploy_url + fallbacks[i].name %>"
-        title="<%=config.headline || project.title%>"
-        sizes="<%=fallbacks[i].width + 'x' + fallbacks[i].height %>"/>
-  <% } %>
-
-  <link rel="alternate" type="application/json+oembed"
-    href="<%=deploy_url%>oembed.json"
-    title="<%=config.headline || project.title%>" />
-
-  <link rel="canonical" href="" />
-
-  <link rel="shortcut icon" href="https://cdn3.vox-cdn.com/community_logos/52517/voxv.png" />
+  <%=render('meta_tags.html.ejs', {slug, deploy_url, embed_meta, config, project}) %>
 
   <style type="text/css">
     @font-face{
