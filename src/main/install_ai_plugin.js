@@ -5,6 +5,7 @@ import state from './index'
 import crypto from 'crypto'
 import { dispatch } from './ipc'
 import { alert, confirm, error, chooseFolder } from './dialogs'
+import { streamCopyFile } from '../lib'
 
 const PATHS = {
   'darwin': [
@@ -63,15 +64,9 @@ function findScriptsPath(appPath) {
 }
 
 function copyScript(scriptsPath) {
-  return new Promise((resolve, reject) => {
-    const src = path.join(state.staticPath, 'ai2html.js')
-    const dest = path.join(scriptsPath, 'ai2html.js')
-    // Can't use copyFile because of asar
-    const ws = fs.createWriteStream(dest)
-    ws.on('error', reject)
-    ws.on('finish', () => resolve(dest))
-    fs.createReadStream(src).pipe(ws)
-  })
+  const src = path.join(state.staticPath, 'ai2html.js')
+  const dest = path.join(scriptsPath, 'ai2html.js')
+  return streamCopyFile(src, dest).then(() => scriptsPath)
 }
 
 function calcHash(filename, type='sha1') {
@@ -122,25 +117,30 @@ export function install({parentWin = null, forceInstall = false} = {}) {
 
         if ( res === 0 ) return;
 
+        let prom
         if (!installed) {
-          guessAppPath()
+          prom = guessAppPath()
             .then(findScriptsPath)
             .catch(() => chooseAppPath(parentWin).then(findScriptsPath))
             .then(copyScript)
-            .then((path) => {
-              alert({parentWin, message: 'The ai2html script has been installed.'})
-              dispatch('set', {key: 'scriptInstallPath', val: path})
-            }, (err) => {
-              error({parentWin, message: 'The ai2html script install failed.', details: err.toString()})
-            })
         } else {
-          copyScript(path.dirname(installPath))
-            .then(() => {
-              alert({parentWin, message: 'The ai2html script has been installed.'})
-            }, (err) => {
-              error({parentWin, message: 'The ai2html script install failed.', details: err.toString()})
-            })
+          prom = copyScript(path.dirname(installPath))
         }
+
+        prom.then(
+          (path) => {
+            alert({parentWin, message: 'The ai2html script has been installed.'})
+            if (!installed) dispatch('set', {key: 'scriptInstallPath', val: path})
+          },
+          (err) => {
+            if ( err.code && err.code == 'EACCES' ) {
+              error({parentWin, message: `The ai2html script install failed.\n\nYou do not have permission to install the plugin.\n\nPlease give yourself write access to ${path.dirname(err.path)}`, details: err.toString()})
+            } else {
+              console.error('install script failed', err)
+              error({parentWin, message: 'The ai2html script install failed.', details: err.toString()})
+            }
+          }
+        )
       })
 
     })

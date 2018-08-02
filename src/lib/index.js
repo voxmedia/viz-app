@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import yaml from 'js-yaml'
 import { template } from 'lodash'
+import { pipeline } from 'stream'
 
 const HOMEDIR = process.env[process.platform == 'win32' ? 'HOMEPATH' : 'HOME']
 
@@ -90,18 +91,14 @@ export function streamCopyFile(src, dest) {
 
   const opts = {highWaterMark: Math.pow(2,16)}
 
-  const readStream = fs.createReadStream(from, opts)
-  const writeStream = fs.createWriteStream(to, opts)
-
   return new Promise((resolve, reject) => {
-    const errors = []
-    readStream.on('error', (err) => errors.push(err))
-    writeStream.on('error', (err) => errors.push(err))
-    writeStream.on('close', () => {
-      if ( errors.length > 0 ) reject(errors)
-      else resolve()
-    })
-
-    readStream.pipe(writeStream)
+    pipeline(
+      fs.createReadStream(from, opts),
+      fs.createWriteStream(to, opts),
+      (err) => {
+        if (err) reject(err)
+        else resolve()
+      }
+    )
   })
 }
