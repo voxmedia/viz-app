@@ -83,3 +83,25 @@ export function render(templateName, data) {
   const tmpl = template(fs.readFileSync(path.join(getStaticPath(), 'templates', templateName), 'utf8'))
   return tmpl(Object.assign({render}, data))
 }
+
+export function streamCopyFile(src, dest) {
+  const from = path.normalize(src)
+  const to = path.normalize(dest)
+
+  const opts = {highWaterMark: Math.pow(2,16)}
+
+  const readStream = fs.createReadStream(from, opts)
+  const writeStream = fs.createWriteStream(to, opts)
+
+  return new Promise((resolve, reject) => {
+    const errors = []
+    readStream.on('error', (err) => errors.push(err))
+    writeStream.on('error', (err) => errors.push(err))
+    writeStream.on('close', () => {
+      if ( errors.length > 0 ) reject(errors)
+      else resolve()
+    })
+
+    readStream.pipe(writeStream)
+  })
+}
