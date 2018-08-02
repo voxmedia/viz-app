@@ -68,7 +68,7 @@
     "aws-sdk": "^2.229.1",
     "electron-json-storage": "^4.0.2",
     "electron-log": "^2.2.14",
-    "electron-updater": "^2.21.4",
+    "electron-updater": "^3.0.3",
     "glob": "^7.1.2",
     "glob-copy": "^0.1.0",
     "js-yaml": "^3.11.0",
