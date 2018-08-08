@@ -5,11 +5,10 @@
 "provider_url": "https://www.voxmedia.com",
 "title": "<%=config.headline || project.title%>",
 "author_name": "<%=config.credit%>",
-"author_url": "",
 "html": "<%=embed_code.replace(/"/g, '\\"')%>",
 "width": "100%",
-"height": "<%=embed_meta.height %>",
+"height": <%=embed_meta.height %>,
 "thumbnail_url": "<%=deploy_url + embed_meta.fallbacks[0].name %>",
-"thumbnail_width": "<%=embed_meta.fallbacks[0].width %>",
-"thumbnail_height": "<%=embed_meta.fallbacks[0].height %>"
+"thumbnail_width": <%=embed_meta.fallbacks[0].width %>,
+"thumbnail_height": <%=embed_meta.fallbacks[0].height %>
 }
