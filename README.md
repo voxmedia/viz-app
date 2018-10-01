@@ -26,6 +26,8 @@ and click deploy.
 - Once deploy is complete (green check will appear), right click on the project
 and click copy embed code.
 - Paste the embed code into your story and publish!
+- If your CMS supports oembed urls, you can use the preview link to automatically
+discover the embed code!
 
 #### Caveats
 
@@ -72,11 +74,11 @@ your efforts can get aligned with other folks' plans.
 
 You can produce custom builds of Vizier for yourself or your colleagues.
 
-Replace or customize the included ai2html script in `static/ai2htmljs`. Most of
-the settings are configured to work with Vizier, but you will probably want to
+Replace or customize the included ai2html script in `static/ai2html.js`. Most of
+the settings are configured to work with Vizier, but you will want to
 adjust the font settings to include fonts that you plan to use in your graphics.
 
-Replace or customize the default layout in `static/project-template/src/layout.ejs`.
+Replace or customize the layout used to generate the embed in `static/project-template/src/layout.ejs`.
 This file is used to wrap the html output of ai2html. It includes css to load
 custom webfonts and js to enable image lazyloading and hiding/showing artboards based on
 the window size. The js also sets up the page to do iframe resizing with pym.js and
