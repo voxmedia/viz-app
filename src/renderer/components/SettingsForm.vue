@@ -20,9 +20,11 @@
 
       <settings-input name="awsRegion" placeholder="ex: us-east-1" @input="handleInput">AWS Region</settings-input>
       <settings-input name="awsAccessKeyId" placeholder="ex: AKIAIOSFODNN7EXAMPLE" @input="handleInput">AWS Access Key&nbsp;ID</settings-input>
-      <settings-input name="awsSecretAccessKey" placeholder="ex: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" @input="handleInput">AWS Secret Access&nbsp;Key</settings-input>
+      <settings-input type="password" name="awsSecretAccessKey" placeholder="ex: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" @input="handleInput">AWS Secret Access&nbsp;Key</settings-input>
 
     </fieldset>
+    <settings-textarea name="extraPreviewCss" placeholder="Insert CSS here" @input="handleInput">Extra CSS to add to the graphics preview. Good for loading custom fonts.</settings-textarea>
+    <settings-textarea name="extraEmbedCss" placeholder="Insert CSS here" @input="handleInput">CSS to load custom fonts for the graphic. Or any other custom CSS you want.</settings-textarea>
   </form>
 </template>
 
@@ -31,12 +33,13 @@
   import { ipcRenderer } from 'electron'
   import atButton from 'at-ui/src/components/button'
   import SettingsInput from './SettingsInput'
+  import SettingsTextarea from './SettingsTextarea'
 
   const timers = {}
 
   export default {
     name: 'settings-form',
-    components: { atButton, SettingsInput },
+    components: { atButton, SettingsInput, SettingsTextarea },
     props: {
       settings: Object
     },
@@ -66,7 +69,6 @@
   margin:20px;
 }
 label {
-  text-align:right;
   display:block;
 }
 fieldset {
@@ -75,9 +77,18 @@ fieldset {
   border-radius:2px;
 }
 input[type=text],
-input[type=password] {
+input[type=password],
+textarea {
   padding:4px;
   width:100%;
+}
+textarea {
+  resize:none;
+  height:4rem;
+}
+
+label + textarea {
+  margin-top:8px;
 }
 legend {
   font-weight:bold;

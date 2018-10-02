@@ -237,7 +237,7 @@ export function editSettings() {
     : `file://${__dirname}/index.html#settings`
 
   const winWidth = 520
-  const winHeight = 430
+  const winHeight = 630
 
   state.settingsWindow = new BrowserWindow({
     //parent: state.mainWindow,

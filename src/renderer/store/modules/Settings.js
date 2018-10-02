@@ -11,6 +11,8 @@ const state = {
   //  awsRegion: null,
   //  awsAccessKeyId: null,
   //  awsSecretAccessKey: null,
+  //  extraPreviewCss: null,
+  //  extraEmbedCss: null,
 }
 
 const mutations = {
