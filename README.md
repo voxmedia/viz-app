@@ -33,11 +33,9 @@ discover the embed code!
 
 #### Caveats
 
-Vizier's ai2html was originally customized for Vox.com and probably does not
-support all the fonts you want to use. If you want your own fonts supported, you
-may have to fork and customize this app. If there are standard web fonts, or
-free fonts you would like to use, open a github issue to ask for the font to
-be added.
+Out of the box, Vizier and the ai2html script it provides only supports Arial and Georgia fonts. If you want to use non-standard web fonts, you will need to create a `.vizappconfig` file and load it in the program.
+
+If you notice a standard web font is missing or not working, please open a github issue about it.
 
 #### Developing
 
@@ -74,24 +72,9 @@ your efforts can get aligned with other folks' plans.
 
 #### Customizing
 
-You can produce custom builds of Vizier for yourself or your colleagues.
+You can write site config files for Vizier which include font data and css to customize the graphic preview, embed and ai2html script.
 
-Replace or customize the included ai2html script in `static/ai2html.js`. Most of
-the settings are configured to work with Vizier, but you will want to
-adjust the font settings to include fonts that you plan to use in your graphics.
-
-Replace or customize the layout used to generate the embed in `static/project-template/src/layout.ejs`.
-This file is used to wrap the html output of ai2html. It includes css to load
-custom webfonts and js to enable image lazyloading and hiding/showing artboards based on
-the window size. The js also sets up the page to do iframe resizing with pym.js and
-AMP.
-
-You may want to adjust the embed code format. You can adjust that in the file
-`src/main/embedcode.js`.
-
-Finally change the version in `package.json` and append your organization name.
-It should look something like `1.0.0-orgname` or `1.0.0-orgname.1`. You may want to disable
-autoupdate by commenting out the lines at the end of `src/main/index.js`.
+The config file is a valid `YAML` document with the extension `.vizappconfig`. [Take a look at the example](https://github.com/voxmedia/viz-app/edit/master/example.vizappconfig).
 
 ---
 
