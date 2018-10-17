@@ -2,7 +2,7 @@
 
 A GUI for ai2html projects. Vizier makes it easy to use the [New York Times' ai2html plugin for Adobe Illustrator](http://ai2html.org/).
 
-![Screenshot of the main UI window](https://apps.voxmedia.com/vizapp-screenshots/main.png)
+<img src="https://apps.voxmedia.com/vizapp-screenshots/main.png" width="383" alt="Screenshot of the main UI window" />
 
 #### How to use it
 
