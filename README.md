@@ -35,7 +35,7 @@ discover the embed code!
 
 Out of the box, Vizier and the ai2html script it provides only supports Arial and Georgia fonts. If you want to use non-standard web fonts, you will need to create a `.vizappconfig` file and load it in the program.
 
-If you notice a standard web font is missing or not working, please open a github issue about it.
+If you notice a standard web font is missing or not working, please open a github issue about it. We won't add non-standard web fonts to the included fonts, even if it's free.
 
 #### Developing
 
