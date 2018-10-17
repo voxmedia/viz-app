@@ -5,7 +5,7 @@ import state from './index'
 import crypto from 'crypto'
 import { dispatch } from './ipc'
 import { alert, confirm, error, chooseFolder } from './dialogs'
-import { streamCopyFile } from '../lib'
+import { render } from '../lib'
 
 const PATHS = {
   'darwin': [
@@ -19,6 +19,8 @@ const PATHS = {
     '~/Applications/Adobe Illustrator CC 2014/Adobe Illustrator.app',
   ],
 }
+
+const HASH_ALGO = 'sha1'
 
 let DEFAULT_PROGRAMS_DIR = null
 let SCRIPTS_DIR = null
@@ -60,18 +62,25 @@ function findScriptsPath(appPath) {
     console.error("Can't find Adobe Illustrator scripts folder. Looked here: ", scriptsPath)
     return Promise.reject(new Error('Adobe Illustrator Scripts folder is missing.'))
   }
+
   return Promise.resolve(scriptsPath)
 }
 
-function copyScript(scriptsPath) {
-  const src = path.join(state.staticPath, 'ai2html.js')
-  const dest = path.join(scriptsPath, 'ai2html.js')
-  return streamCopyFile(src, dest).then(() => scriptsPath)
+function renderAi2htmlScript() {
+  return render('ai2html.js.ejs', {settings: state.data.Settings})
 }
 
-function calcHash(filename, type='sha1') {
+function copyScript(scriptsPath) {
+  const output = renderAi2htmlScript()
+  const dest = path.join(scriptsPath, 'ai2html.js')
+  fs.writeFileSync(dest, output)
+  return Promise.resolve(scriptsPath)
+}
+
+function calcHash(filename) {
   return new Promise((resolve, reject) => {
-    const hash = crypto.createHash(type)
+    if ( !fs.existsSync(filename) ) return reject(`File not found ${filename}`)
+    const hash = crypto.createHash(HASH_ALGO)
     hash.on('readable', () => {
       const data = hash.read()
       if ( data ) resolve(data.toString('hex'))
@@ -81,72 +90,86 @@ function calcHash(filename, type='sha1') {
   })
 }
 
-function isInstalled() {
+export function calcInstalledHash() {
   const installPath = state.data.Settings.scriptInstallPath
-  return Promise.resolve(installPath && fs.existsSync(installPath))
+  if ( !installPath || !fs.existsSync(installPath) ) return null
+  const scriptPath = path.join(installPath, 'ai2html.js')
+  if ( !fs.existsSync(scriptPath) ) return null
+  const hash = crypto.createHash(HASH_ALGO)
+  hash.update(fs.readFileSync(scriptPath, 'utf8'))
+  return hash.digest('hex')
 }
 
-function isUpdated() {
-  const installPath = state.data.Settings.scriptInstallPath
-  if ( ! fs.existsSync(installPath) ) return Promise.resolve(null)
-  return calcHash(installPath).then((installedHash) => AI2HTML_HASH === installedHash)
+export function calcNewHash() {
+  const hash = crypto.createHash(HASH_ALGO)
+  hash.update(renderAi2htmlScript())
+  return hash.digest('hex')
 }
 
 export function install({parentWin = null, forceInstall = false} = {}) {
   const startupCheck = state.data.Settings.disableAi2htmlStartupCheck
   const installPath = state.data.Settings.scriptInstallPath
 
-  Promise.all([isInstalled(), isUpdated()])
-    .then(([installed, updated]) => {
-      let verb
-      if(!installed) verb = 'Install'
-      else if (installed && !updated) verb = 'Update'
-      else if (forceInstall) verb = 'Reinstall'
-      else return;
+  // We don't recalculate hashes here because they should be accurate
+  const installedHash = state.installedAi2htmlHash
+  const newHash = state.newAi2htmlHash
 
-      dialog.showMessageBox(parentWin, {
-        type: 'question',
-        title: `${verb} ai2html`,
-        message: `Would you like to ${verb.toLowerCase()} ai2html?`,
-        defaultId: 1,
-        buttons: ['No', `${verb} ai2html`],
-        checkboxLabel: "Always check on startup",
-        checkboxChecked: !startupCheck,
-      }, (res, checkboxChecked) => {
-        dispatch('set', {key: 'disableAi2htmlStartupCheck', val: !checkboxChecked})
+  let verb
+  if(!installedHash) verb = 'Install'
+  else if (installedHash != newHash) verb = 'Update'
+  else if (forceInstall) verb = 'Reinstall'
+  else return;
 
-        if ( res === 0 ) return;
+  dialog.showMessageBox(parentWin, {
+    type: 'question',
+    title: `${verb} ai2html`,
+    message: `Would you like to ${verb.toLowerCase()} ai2html?`,
+    defaultId: 1,
+    buttons: ['No', `${verb} ai2html`],
+    checkboxLabel: "Always check on startup",
+    checkboxChecked: !startupCheck,
+  }, (res, checkboxChecked) => {
+    dispatch('updateSettings', {disableAi2htmlStartupCheck: !checkboxChecked})
 
-        let prom
-        if (!installed) {
-          prom = guessAppPath()
-            .then(findScriptsPath)
-            .catch(() => chooseAppPath(parentWin).then(findScriptsPath))
-            .then(copyScript)
+    if ( res === 0 ) return;
+
+    let prom
+    if (!installPath) {
+      prom = guessAppPath()
+        .then(findScriptsPath)
+        .catch(() => chooseAppPath(parentWin).then(findScriptsPath))
+        .then(copyScript)
+    } else {
+      prom = copyScript(installPath)
+    }
+
+    prom.then(
+      (path) => {
+        alert({parentWin, message: 'The ai2html script has been installed.'})
+        state.installedAi2htmlHash = newHash
+        dispatch('updateSettings', {scriptInstallPath: path})
+      },
+      (err) => {
+        if ( err.code && err.code == 'EACCES' ) {
+          error({
+            parentWin,
+            message: `The ai2html script install failed.\n\nYou do not have permission to install the plugin.\n\nPlease give yourself write access to ${path.dirname(err.path)}`,
+            details: err.toString()
+          })
         } else {
-          prom = copyScript(path.dirname(installPath))
+          console.error('install script failed', err)
+          error({parentWin, message: 'The ai2html script install failed.', details: err.toString()})
         }
-
-        prom.then(
-          (path) => {
-            alert({parentWin, message: 'The ai2html script has been installed.'})
-            if (!installed) dispatch('set', {key: 'scriptInstallPath', val: path})
-          },
-          (err) => {
-            if ( err.code && err.code == 'EACCES' ) {
-              error({parentWin, message: `The ai2html script install failed.\n\nYou do not have permission to install the plugin.\n\nPlease give yourself write access to ${path.dirname(err.path)}`, details: err.toString()})
-            } else {
-              console.error('install script failed', err)
-              error({parentWin, message: 'The ai2html script install failed.', details: err.toString()})
-            }
-          }
-        )
-      })
-
-    })
+      }
+    )
+  })
 }
 
 export function checkOnLaunch() {
+  // Calculate and stash these hashes at launch
+  state.installedAi2htmlHash = calcInstalledHash()
+  state.newAi2htmlHash = calcNewHash()
+
   if ( state.data.Settings.disableAi2htmlStartupCheck === true ) return;
-  install()
+  install({parentWin: state.mainWindow})
 }

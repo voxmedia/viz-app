@@ -102,3 +102,7 @@ export function streamCopyFile(src, dest) {
     )
   })
 }
+
+export function settingsLabel() {
+  return process.platform === 'darwin' ? 'Preferences' : 'Settings'
+}

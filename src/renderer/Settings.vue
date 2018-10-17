@@ -8,14 +8,13 @@
 <script>
   import Toolbar from './components/Toolbar'
   import SettingsForm from './components/SettingsForm'
+  import { settingsLabel } from '../lib'
 
   export default {
     name: 'settings',
     components: { Toolbar, SettingsForm },
     computed: {
-      settingsLabel() {
-        return process.platform === 'darwin' ? 'Preferences' : 'Settings'
-      }
+      settingsLabel
     },
     methods: {
       handleDrop (eve) {
@@ -34,6 +33,7 @@
   body {
     font: caption;
     overflow:hidden;
+    user-select:none;
   }
   /* CSS */
 </style>

@@ -4,13 +4,15 @@ import path from 'path'
 import rmrf from 'rimraf'
 import fs from 'fs'
 import { slugify } from 'underscore.string'
+import yaml from 'js-yaml'
 
 import { dispatch, resetState } from './ipc'
 import state from './index'
 import { install } from './install_ai_plugin'
 import { run } from './workers'
-import { error } from './dialogs'
+import { error, alert, confirm } from './dialogs'
 import storage from './storage'
+import defaultData from './default_data'
 
 import { expandHomeDir, compactHomeDir } from '../lib'
 import renderEmbedCode from '../lib/embed_code'
@@ -237,7 +239,7 @@ export function editSettings() {
     : `file://${__dirname}/index.html#settings`
 
   const winWidth = 520
-  const winHeight = 630
+  const winHeight = 512
 
   state.settingsWindow = new BrowserWindow({
     //parent: state.mainWindow,
@@ -289,5 +291,51 @@ export function clearState() {
       state.data = data
       resetState(data)
     })
+  })
+}
+
+export function resetSettings() {
+  confirm({
+    parentWin: state.settingsWindow,
+    message: 'Do you wish to reset and clear your settings?',
+    confirmLabel: 'Reset settings'
+  }).then(() => {
+    state.installedAi2htmlHash = null
+    state.newAi2htmlHash = null
+    dispatch('resetSettings', defaultData.Settings)
+  })
+}
+
+const ALLOWED_KEYS = [
+  'deployBaseUrl', 'deployType',
+  'awsBucket', 'awsPrefix', 'awsRegion', 'awsAccessKeyId', 'awsSecretAccessKey',
+  'siteConfigName', 'extraPreviewCss', 'extraEmbedCss', 'ai2htmlFonts'
+]
+
+export function importSettings() {
+  dialog.showOpenDialog( state.settingsWindow, {
+    message: 'Select a config file to load.',
+    filters: [{name: 'Viz Config', extensions: ['vizappconfig']}],
+    properties: [ 'openFile' ]
+  }, (filePaths) => {
+    if (!filePaths || filePaths.length === 0) return;
+
+    const configFile = filePaths[0]
+    const configContent = fs.readFileSync(configFile, 'utf8')
+    const data = yaml.safeLoad(configContent)
+    const configVersion = data.version || 1
+
+    if ( configVersion != 1 ) {
+      error({
+        parentWin: state.settingsWindow,
+        message: 'This config file is for a different version of the app.'
+      })
+    } else {
+      const newSettings = {}
+      for ( const k of ALLOWED_KEYS ) {
+        if ( k in data && data[k] ) newSettings[k] = data[k]
+      }
+      dispatch('updateSettings', newSettings)
+    }
   })
 }

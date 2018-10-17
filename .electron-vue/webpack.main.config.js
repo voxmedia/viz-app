@@ -78,7 +78,6 @@ else if (version.indexOf('alpha') >= 0 ) channel = 'alpha'
 
 mainConfig.plugins.push(
   new webpack.DefinePlugin({
-    'AI2HTML_HASH': `"${crypto.createHash('sha1').update(fs.readFileSync(path.join(__dirname, '../static/ai2html.js'))).digest('hex')}"`,
     'AUTOUPDATE_CHANNEL': `"${channel}"`
   })
 )

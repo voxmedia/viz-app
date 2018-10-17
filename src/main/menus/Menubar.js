@@ -1,5 +1,5 @@
 import {app, Menu, shell} from 'electron'
-import { newProject, openProject, editSettings, installAi2html, clearState } from '../actions'
+import { newProject, openProject, editSettings, installAi2html, clearState, importSettings } from '../actions'
 import state from '../index'
 import storage from '../storage'
 
@@ -10,6 +10,7 @@ const MACOSX_MENUBAR_TEMPLATE = [
       {role: 'about'},
       {type: 'separator'},
       {label: 'Preferences', click(eve) { editSettings() }},
+      {label: 'Import preferences', click(eve) { importSettings() }},
       {label: 'Install ai2html', click(eve) { installAi2html() }},
       {type: 'separator'},
       {role: 'services', submenu: []},

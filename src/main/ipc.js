@@ -2,7 +2,8 @@ import { ipcMain, BrowserWindow } from 'electron'
 import ProjectContextMenu from './menus/ProjectContextMenu'
 import state from './index'
 import storage from './storage'
-import { newProject, addProjects, deployProject, editSettings, installAi2html, openInIllustrator } from './actions'
+import { newProject, addProjects, deployProject, editSettings, installAi2html, openInIllustrator, importSettings, resetSettings } from './actions'
+import { calcInstalledHash, calcNewHash } from './install_ai_plugin'
 
 // Sync messages
 ipcMain.on( 'get-state', (eve) => {
@@ -11,6 +12,13 @@ ipcMain.on( 'get-state', (eve) => {
 
 ipcMain.on( 'has-focus', (eve) => {
   eve.returnValue = eve.sender.isFocused()
+} )
+
+ipcMain.on( 'get-hashes', (eve) => {
+  eve.returnValue = {
+    installedHash: state.installedAi2htmlHash,
+    newHash: state.newAi2htmlHash
+  }
 } )
 
 
@@ -27,7 +35,12 @@ ipcMain.on( 'store-mutate', (eve, arg) => {
     return console.error('State is missing in store-mutate ipc', arg.mutation, arg.state)
 
   // Parse and cache current state
+  const oldData = state.data
   state.data = JSON.parse( arg.state )
+
+  // Recalculate the ai2html script hash if necessary
+  if ( state.data.Settings.ai2htmlFonts != oldData.Settings.ai2htmlFonts )
+    state.newAi2htmlHash = calcNewHash()
 
   // Make sure other windows have same state
   const srcWin = BrowserWindow.fromWebContents(eve.sender)
@@ -75,6 +88,19 @@ ipcMain.on( 'install-ai2html', (eve, arg) => {
     installAi2html()
 } )
 
+ipcMain.on( 'import-settings', (eve, arg) => {
+  if ( arg.from == 'settings-window' )
+    importSettings(state.settingsWindow)
+  else
+    importSettings()
+} )
+
+ipcMain.on( 'reset-settings', (eve, arg) => {
+  if ( arg.from == 'settings-window' )
+    resetSettings(state.settingsWindow)
+  else
+    resetSettings()
+} )
 
 // Senders
 export function dispatch(action, payload) {

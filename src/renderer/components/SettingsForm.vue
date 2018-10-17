@@ -6,7 +6,15 @@
       <div class="col-6">
       </div>
       <div class="col-18">
-        <at-button @click="handleAi2htmlInstall" icon="icon-package">Install ai2html</at-button>
+        <at-button @click="handleAi2htmlInstall()" icon="icon-package">{{ai2htmlNeedsInstall() ? 'Install' : (ai2htmlNeedsUpdate() ? 'Update' : 'Reinstall')}} ai2html</at-button>
+        <at-tag v-if="ai2htmlNeedsInstall()" color="warning">
+          <i class="icon icon-alert-triangle"></i>
+          Install needed
+        </at-tag>
+        <at-tag v-if="ai2htmlNeedsUpdate() && !ai2htmlNeedsInstall()" color="warning">
+          <i class="icon icon-alert-triangle"></i>
+          Update needed
+        </at-tag>
       </div>
     </div>
 
@@ -23,8 +31,28 @@
       <settings-input type="password" name="awsSecretAccessKey" placeholder="ex: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" @input="handleInput">AWS Secret Access&nbsp;Key</settings-input>
 
     </fieldset>
-    <settings-textarea name="extraPreviewCss" placeholder="Insert CSS here" @input="handleInput">Extra CSS to add to the graphics preview. Good for loading custom fonts.</settings-textarea>
-    <settings-textarea name="extraEmbedCss" placeholder="Insert CSS here" @input="handleInput">CSS to load custom fonts for the graphic. Or any other custom CSS you want.</settings-textarea>
+
+    <div class="row at-row flex-middle">
+      <div class="col-6">
+        <label class="text-right">Fonts and embed customization:</label>
+      </div>
+      <div class="col-18">
+        <at-tag :color="hasSiteConfig ? 'success' : 'warning'">
+          <i v-if="!hasSiteConfig" class="icon icon-alert-triangle"></i>
+          <i v-if="hasSiteConfig" class="icon icon-check"></i>
+          {{hasSiteConfig ? settings.siteConfigName : 'None'}}
+        </at-tag>
+      </div>
+    </div>
+
+    <div class="row at-row flex-middle">
+      <div class="col-6">
+      </div>
+      <div class="col-18">
+        <at-button @click="handleImportSettings" icon="icon-folder">Import {{settingsLabel.toLowerCase()}}</at-button>
+        <at-button @click="handleClearSettings" icon="icon-trash">Reset {{settingsLabel.toLowerCase()}}</at-button>
+      </div>
+    </div>
   </form>
 </template>
 
@@ -34,18 +62,34 @@
   import atButton from 'at-ui/src/components/button'
   import SettingsInput from './SettingsInput'
   import SettingsTextarea from './SettingsTextarea'
+  import atTag from 'at-ui/src/components/tag'
+  import { settingsLabel } from '../../lib'
 
   const timers = {}
 
   export default {
     name: 'settings-form',
-    components: { atButton, SettingsInput, SettingsTextarea },
+    components: { atButton, atTag, SettingsInput, SettingsTextarea },
     props: {
       settings: Object
+    },
+    computed: {
+      settingsLabel,
+      hasSiteConfig() {
+        return !!this.settings.siteConfigName
+      },
     },
     methods: {
       handleSubmit(eve) {
         eve.preventDefault()
+      },
+      ai2htmlNeedsInstall() {
+        const hashes = ipcRenderer.sendSync('get-hashes')
+        return !hashes.installedHash
+      },
+      ai2htmlNeedsUpdate() {
+        const hashes = ipcRenderer.sendSync('get-hashes')
+        return hashes.installedHash != hashes.newHash
       },
       handleInput(eve) {
         console.log('recieve input')
@@ -60,6 +104,12 @@
       handleAi2htmlInstall(eve) {
         ipcRenderer.send('install-ai2html', {from: 'settings-window'})
       },
+      handleImportSettings(eve) {
+        ipcRenderer.send('import-settings', {from: 'settings-window'})
+      },
+      handleClearSettings(eve) {
+        ipcRenderer.send('reset-settings', {from: 'settings-window'})
+      }
     }
   }
 </script>

@@ -11,20 +11,38 @@ const state = {
   //  awsRegion: null,
   //  awsAccessKeyId: null,
   //  awsSecretAccessKey: null,
+  //  siteConfigName: null,
   //  extraPreviewCss: null,
   //  extraEmbedCss: null,
+  //  ai2htmlFonts: null,
 }
 
 const mutations = {
-  SETTINGS_SET ( state, { key, val } ) {
-    if ( key in state ) state[key] = val
-    else Vue.set(state, key, val)
+  SETTINGS_SET ( state, newSettings ) {
+    for (const key in newSettings) {
+      if ( key in state ) state[key] = newSettings[key]
+      else Vue.set(state, key, newSettings[key])
+    }
+  },
+  SETTINGS_RESET ( state, defaults ) {
+    for ( const k in state ) {
+      if ( k in defaults ) state[k] = defaults[k]
+      else state[k] = null
+    }
   },
 }
 
 const actions = {
   set ({commit}, { key, val }) {
-    commit('SETTINGS_SET', {key, val})
+    const args = {}
+    args[key] = val
+    commit('SETTINGS_SET', args)
+  },
+  updateSettings ({commit}, newSettings) {
+    commit('SETTINGS_SET', newSettings)
+  },
+  resetSettings ({commit}, defaults) {
+    commit('SETTINGS_RESET', defaults)
   }
 }
 

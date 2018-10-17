@@ -15,7 +15,10 @@ const data = {
     "awsPrefix": null,
     "awsRegion": 'us-east-1',
     "awsAccessKeyId": null,
-    "awsSecretAccessKey": null
+    "awsSecretAccessKey": null,
+    "extraPreviewCss": null,
+    "extraEmbedCss": null,
+    "ai2htmlFonts": null
   }
 }
 

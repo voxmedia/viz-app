@@ -411,26 +411,8 @@ var fonts = [
 {"aifont":"Georgia","family":"georgia,'times new roman',times,serif","weight":"","style":""},
 {"aifont":"Georgia-Bold","family":"georgia,'times new roman',times,serif","weight":"bold","style":""},
 {"aifont":"Georgia-Italic","family":"georgia,'times new roman',times,serif","weight":"","style":"italic"},
-{"aifont":"Georgia-BoldItalic","family":"georgia,'times new roman',times,serif","weight":"bold","style":"italic"},
-
-{"aifont":"Balto-Medium","family":"'Balto', helvetica, sans-serif","weight":"400","style":""},
-{"aifont":"Balto-MediumItalic","family":"'Balto', helvetica, sans-serif","weight":"400","style":"italic"},
-{"aifont":"Balto-Bold","family":"'Balto', helvetica, sans-serif","weight":"700","style":""},
-{"aifont":"Balto-BoldItalic","family":"'Balto', helvetica, sans-serif","weight":"700","style":"italic"},
-{"aifont":"Balto-Book","family":"'Balto', helvetica, sans-serif","weight":"400","style":""},
-{"aifont":"Balto-BookItalic","family":"'Balto', helvetica, sans-serif","weight":"400","style":"italic"},
-{"aifont":"Balto-Black","family":"'Balto', helvetica, sans-serif","weight":"900","style":""},
-
-{"aifont":"Harriet-Bold","family":"'Harriet', helvetica, sans-serif","weight":"700","style":""},
-{"aifont":"Harriet-Book","family":"'Harriet', helvetica, sans-serif","weight":"400","style":""},
-{"aifont":"Harriet-BookItalic","family":"'Harriet', helvetica, sans-serif","weight":"400","style":"italic"},
-
-{"aifont":"HarrietDisplay-Bold","family":"'Harriet Display', helvetica, sans-serif","weight":"700","style":""},
-{"aifont":"HarrietDisplay-BoldItalic","family":"'Harriet Display', helvetica, sans-serif","weight":"700","style":"italic"},
-{"aifont":"HarrietDisplay-Black","family":"'Harriet Display', helvetica, sans-serif","weight":"900","style":""},
-
-{"aifont":"NittiGrotesk","family":"'Nitti',helvetica, sans-serif","weight":"400","style":""},
-{"aifont":"NittiGrotesk-Bold","family":"'Nitti-Bold','Nitti',helvetica, sans-serif","weight":"700","style":""}
+{"aifont":"Georgia-BoldItalic","family":"georgia,'times new roman',times,serif","weight":"bold","style":"italic"}<%=settings.ai2htmlFonts ? ',' : ''%>
+<%=settings.ai2htmlFonts%>
 ];
 
 // CSS text-transform equivalents
@@ -989,7 +971,7 @@ function testSimilarBounds(a, b, maxOffs) {
 function applyTemplate(template, replacements) {
   var keyExp = '([_a-zA-Z][\\w-]*)';
   var mustachePattern = new RegExp("\\{\\{\\{? *" + keyExp + " *\\}\\}\\}?","g");
-  var ejsPattern = new RegExp("<%=? *" + keyExp + " *%>","g");
+  var ejsPattern = new RegExp("<"+"%=? *" + keyExp + " *%"+">","g");
   var replace = function(match, name) {
     var lcname = name.toLowerCase();
     if (name in replacements) return replacements[name];

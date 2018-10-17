@@ -59,6 +59,7 @@
   body {
     font: caption;
     overflow:hidden;
+    user-select:none;
   }
   /* CSS */
 </style>
