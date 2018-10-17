@@ -1,0 +1,55 @@
+# REQUIRED config file version string. Only '1' is supported
+version: 1
+
+# OPTIONAL Deploy and s3 settings are optional and can be configured separately
+# through the app's preference screen.
+
+# The public URL where your graphics will be deployed to
+deployBaseUrl: https://graphics.example.com/ai2htmlgraphics
+# Only s3 is supported for deployType
+deployType: s3
+# The s3 bucket to upload the graphic to
+awsBucket: my-graphics-bucket
+# The path prefix or folder in the bucket to upload things to
+awsPrefix: ai2htmlgraphics
+# The AWS region where your S3 bucket lives
+awsRegion: us-east-1
+# The AWS access key and ID needed to upload to these places. (Be careful sending passwords around!)
+awsAccessKeyId: null
+awsSecretAccessKey: null
+
+# REQUIRED. The site or brand name to display to the user so they know what config is loaded
+siteConfigName: Example.com
+# OPTIONAL. Css to add to the preview graphic page. You can use this to customize the UI font.
+extraPreviewCss: |-
+  @font-face {
+    font-family: 'Fancy UI';
+    src: url('https://fonts.example.com/graphics/fancyui-regular.woff2') format('woff2'),
+         url('https://fonts.example.com/graphics/fancyui-regular.woff') format('woff');
+    font-weight: 400;
+  }
+  body { font-family: 'Fancy UI', Helvetica, Arial, sans-serif; }
+# REQUIRED. This CSS is added to the graphic embed. Use it to load the brand fonts for your website.
+# The font names, weights and styles should match up with the data in the next `ai2htmlFonts` setting.
+extraEmbedCss: |-
+  @font-face
+    font-family: 'FancySans';
+    src: url('https://fonts.example.com/graphics/fancysans-book.woff') format('woff'),
+         url('https://fonts.example.com/graphics/fancysans-book.woff2') format('woff2');
+    font-weight:400;
+    font-style:normal;
+  }
+
+  @font-face
+    font-family: 'FancySans';
+    src: url('https://fonts.example.com/graphics/fancysans-bold.woff') format('woff'),
+         url('https://fonts.example.com/graphics/fancysans-bold.woff2') format('woff2');
+    font-weight:700;
+    font-style:normal;
+  }
+# REQUIRED. A list of comma-separated JSON objects to convert Adobe Illustrator font names to web
+# font names. Install the `aifontname.js` script from the ai2html project to your local AI installation
+# and run it to identify AI font names.
+ai2htmlFonts: |-
+  {"aifont":"FancySans-Bold","family":"'FancySans', helvetica, sans-serif","weight":"700","style":""},
+  {"aifont":"FancySans-Book","family":"'FancySans', helvetica, sans-serif","weight":"400","style":""},
