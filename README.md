@@ -74,7 +74,7 @@ your efforts can get aligned with other folks' plans.
 
 You can write site config files for Vizier which include font data and css to customize the graphic preview, embed and ai2html script.
 
-The config file is a valid `YAML` document with the extension `.vizappconfig`. [Take a look at the example](https://github.com/voxmedia/viz-app/edit/master/example.vizappconfig).
+The config file is a valid `YAML` document with the extension `.vizappconfig`. [Take a look at the example](https://github.com/voxmedia/viz-app/blob/master/example.vizappconfig).
 
 ---
 
