@@ -37,6 +37,12 @@ Out of the box, Vizier and the ai2html script it provides only supports Arial an
 
 If you notice a standard web font is missing or not working, please open a github issue about it. We won't add non-standard web fonts to the included fonts, even if it's free.
 
+#### Customizing
+
+You can write site config files for Vizier which include font data and css to customize the graphic preview, embed and ai2html script.
+
+The config file is a valid `YAML` document with the extension `.vizappconfig`. [Take a look at the example](https://github.com/voxmedia/viz-app/blob/master/example.vizappconfig).
+
 #### Developing
 
 This app uses Electron, Vue.js. Recommend using `yarn` instead of `npm`.
@@ -69,12 +75,6 @@ If its a small bugfix, feel free making the changes and opening a PR. If it's a
 feature addition or a more substantial change, please open a github issue
 outlining the feature or change. This is just to save you time and make sure
 your efforts can get aligned with other folks' plans.
-
-#### Customizing
-
-You can write site config files for Vizier which include font data and css to customize the graphic preview, embed and ai2html script.
-
-The config file is a valid `YAML` document with the extension `.vizappconfig`. [Take a look at the example](https://github.com/voxmedia/viz-app/blob/master/example.vizappconfig).
 
 ---
 
