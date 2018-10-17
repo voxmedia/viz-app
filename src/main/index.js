@@ -104,6 +104,7 @@ app.on('ready', () => {
   if (process.env.NODE_ENV === 'production') {
     // This is supposedly unnecessary. But it doesn't work without it.
     autoUpdater.channel = AUTOUPDATE_CHANNEL
+    autoUpdater.allowDowngrade = false
     autoUpdater.setFeedURL('https://apps.voxmedia.com/vizapp/')
 
     autoUpdater.checkForUpdatesAndNotify()
