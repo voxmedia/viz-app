@@ -18,7 +18,7 @@ you plan to publish anything.
 project. This will create a new folder containing an ai file and a `src` folder.
 - Open the ai file by double clicking the project in Vizier.
 - Make an awesome graphic.
-- Run ai2html to export your graphic. File > Scripts > ai2html.
+- Run ai2html to export your graphic. File > Scripts > ai2html (If you don't see an ai2html option, you may need to restart illustrator).
 - By default ai2html will export every artboard. Ai2html looks at the pixel size
 of every artboard and the artboard will be displayed if the window is large enough.
 If you want to exempt an artboard from export, adjust the artboard name to begin
