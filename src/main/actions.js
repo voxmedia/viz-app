@@ -342,3 +342,12 @@ export function importSettings() {
     }
   })
 }
+
+export function openLog() {
+  const filename = path.join(app.getPath('userData'), 'log.log')
+  if ( fs.existsSync(filename) ) {
+    shell.openItem(filename)
+  } else {
+    alert({message: 'No log to open.'})
+  }
+}

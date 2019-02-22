@@ -1,6 +1,5 @@
 import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import path from 'path'
 import log from 'electron-log'
 import Menubar from './menus/Menubar'
 import storage from './storage'
@@ -53,8 +52,11 @@ function createWindow () {
 
   state.mainWindow.loadURL(winURL)
 
-  if (process.platform == 'darwin')
+  if (process.platform == 'darwin') {
     state.mainWindow.setSheetOffset(22)
+  } else {
+    state.mainWindow.setMenu( Menubar() )
+  }
 
   state.mainWindow.on('close', (eve) => {
     if (process.platform === 'darwin' && !state.quitting) {
@@ -90,7 +92,8 @@ function setupEventHandlers() {
       state.data = data
       state.selectedProject = data.Projects.find(p => p.focus)
       createWindow()
-      Menu.setApplicationMenu( Menubar() )
+      if ( process.platform === 'darwin' )
+        Menu.setApplicationMenu( Menubar() )
     })
 
     // Setup autoupdates
