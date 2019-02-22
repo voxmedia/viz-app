@@ -1,4 +1,5 @@
 import tasks from './tasks'
+import log from 'electron-log'
 
 export function done(result) {
   process.send(['done', result])
@@ -8,9 +9,9 @@ export function fail(error) {
   let ret = error
   if ( error.message ) {
     ret = `Programming error, please report this.\r\n\r\n${error.name}: ${error.message}`
-    console.log(error.stack)
+    log.error(error.stack)
   } else if ( typeof(error) !== 'string' ) {
-    console.log(error)
+    log.error(error)
     ret = 'Unknown error occured'
   }
   process.send(['fail', ret])

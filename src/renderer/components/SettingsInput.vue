@@ -9,6 +9,7 @@
         :type="type"
         :id="id"
         @input="handleInput"
+        @contextmenu="handleRightClick"
         :placeholder="placeholder"
         :value="val"
         ></input>
@@ -17,12 +18,18 @@
 </template>
 
 <script>
+  import { ipcRenderer } from 'electron'
   import { humanize, camelize, dasherize } from 'underscore.string'
 
   const INPUT_TYPES = [
     'button', 'checkbox', 'color', 'date', 'datetime-local', 'email', 'hidden',
     'image', 'month', 'number', 'password', 'radio', 'range', 'reset',
     'search', 'submit', 'tel', 'text', 'time', 'url', 'week'
+  ]
+
+  const CONTEXT_MENU_INPUT_TYPES = [
+    'color', 'date', 'datetime-local', 'email', 'month', 'number', 'password',
+    'search', 'tel', 'text', 'time', 'url', 'week'
   ]
 
   export default {
@@ -43,6 +50,12 @@
     methods: {
       handleInput(eve) {
         this.$emit('input', eve)
+      },
+      handleRightClick (e) {
+        e.preventDefault()
+        if ( CONTEXT_MENU_INPUT_TYPES.includes(this.type) ) {
+          ipcRenderer.send('input-context-menu')
+        }
       }
     }
   }

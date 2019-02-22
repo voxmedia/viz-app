@@ -1,3 +1,6 @@
+import { expandHomeDir } from '../lib'
+import { app } from 'electron'
+
 /*
  * This data object is loaded as the application state.data on first run, or if
  * the saved application state is removed. Is a useful reference for the
@@ -8,7 +11,7 @@ const data = {
   "Settings": {
     "disableAi2htmlStartupCheck": false,
     "scriptInstallPath": null,
-    "projectDir": process.platform === 'win32' ? "%HOMEPATH%\\Projects" : "~/Projects",
+    "projectDir": process.platform === 'win32' ? app.getPath('home') + "\\Projects" : "~/Projects",
     "deployBaseUrl": null,
     "deployType": 's3',
     "awsBucket": null,

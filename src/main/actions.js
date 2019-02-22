@@ -1,10 +1,10 @@
 import { dialog, BrowserWindow, shell, app, clipboard } from 'electron'
 import uuid from 'uuid'
 import path from 'path'
-import rmrf from 'rimraf'
-import fs from 'fs'
+import fs from 'fs-extra'
 import { slugify } from 'underscore.string'
 import yaml from 'js-yaml'
+import log from 'electron-log'
 
 import { dispatch, resetState } from './ipc'
 import state from './index'
@@ -18,10 +18,13 @@ import { expandHomeDir, compactHomeDir } from '../lib'
 import renderEmbedCode from '../lib/embed_code'
 
 export function newProject() {
+  const projectsDir = expandHomeDir(state.data.Settings.projectDir, app.getPath('home'))
+  if ( !fs.existsSync(projectsDir) ) fs.ensureDirSync(projectsDir)
   dialog.showSaveDialog(
     state.mainWindow,
     {
-      defaultPath: expandHomeDir(state.data.Settings.projectDir),
+      title: 'Create a new project',
+      defaultPath: projectsDir,
       nameFieldLabel: 'Project:', // TODO: why doesn't 'Project name:' display correctly?
       buttonLabel: 'Create'
     },
@@ -35,7 +38,7 @@ export function newProject() {
 export function addProjects(filenames) {
   for ( const filename of filenames ) {
     const title = path.basename(filename)
-    const ppath = compactHomeDir(filename)
+    const ppath = compactHomeDir(filename, app.getPath('home'))
 
     if ( fs.existsSync(filename) ) {
       const stats = fs.statSync(filename)
@@ -47,10 +50,10 @@ export function addProjects(filenames) {
         })
       }
 
-      if ( !fs.existsSync(path.join(filename, 'src')) ) {
+      if ( !fs.existsSync(path.join(filename, `${title}.ai`)) ) {
         return error({
           parentWin: state.mainWindow,
-          message: `This is not a project folder`,
+          message: `This is not a project folder. It is missing the Illustrator file "${title}.ai".`,
           details: `Folder was ${filename}`,
         })
       }
@@ -72,7 +75,7 @@ export function addProjects(filenames) {
     const project = {
       id: uuid(),
       title: path.basename(filename),
-      path: compactHomeDir(filename),
+      path: compactHomeDir(filename, app.getPath('home')),
       status: "new",
       deployedDate: null,
       errorMessage: null,
@@ -84,7 +87,7 @@ export function addProjects(filenames) {
     if ( !fs.existsSync(filename) ) {
       run('project_create', { project, settings: state.data.Settings })
         .then((p) => {
-          console.log("Project created successfully!")
+          log.debug("Project created successfully!")
         }, (err) => {
           dispatch( 'project_error', [project.id, err.toString()] )
         })
@@ -96,7 +99,7 @@ export function openProject() {
   dialog.showOpenDialog(
     state.mainWindow,
     {
-      defaultPath: expandHomeDir(state.data.Settings.projectDir),
+      defaultPath: expandHomeDir(state.data.Settings.projectDir, app.getPath('home')),
       message: 'Select an existing project folder to add.',
       properties: [ 'openDirectory', 'multiSelections' ]
   }, (filePaths) => {
@@ -107,7 +110,7 @@ export function openProject() {
 }
 
 export function deployProject() {
-  if ( !state.selectedProject ) return console.error('deployProject: No selected project!')
+  if ( !state.selectedProject ) return log.debug('deployProject: No selected project!')
   const project = state.selectedProject
   dispatch( 'project_status', [project.id, 'deploying'] )
   run('project_deploy', { project, settings: state.data.Settings })
@@ -120,8 +123,8 @@ export function deployProject() {
 }
 
 export function openFolder() {
-  if ( !state.selectedProject ) return console.error('openFolder: No selected project!')
-  const projectPath = expandHomeDir(state.selectedProject.path)
+  if ( !state.selectedProject ) return log.debug('openFolder: No selected project!')
+  const projectPath = expandHomeDir(state.selectedProject.path, app.getPath('home'))
   if (fs.existsSync(projectPath))
     shell.openItem(projectPath)
   else
@@ -132,9 +135,9 @@ export function openFolder() {
 }
 
 export function openInIllustrator() {
-  if ( !state.selectedProject ) return console.error('openInIllustrator: No selected project!')
+  if ( !state.selectedProject ) return log.debug('openInIllustrator: No selected project!')
   const p = state.selectedProject
-  const projectPath = expandHomeDir(state.selectedProject.path)
+  const projectPath = expandHomeDir(state.selectedProject.path, app.getPath('home'))
   const filepath = path.join(projectPath, `${p.title}.ai`)
   if (fs.existsSync(filepath))
     shell.openItem(filepath)
@@ -157,7 +160,7 @@ export function copyEmbedCode() {
       renderEmbedCode({project: state.selectedProject, settings: state.data.Settings}),
       'text/html')
   } catch(e) {
-    console.error('copyEmbedCode: ' + e.message)
+    log.error('copyEmbedCode: ' + e.message)
     if ( e.message == 'Missing project config.yml' ) {
       error({
         parentWin: state.mainWindow,
@@ -168,11 +171,11 @@ export function copyEmbedCode() {
 }
 
 export function copyPreviewLink() {
-  if ( !state.selectedProject ) return console.error('copyLink: No selected project!')
+  if ( !state.selectedProject ) return log.debug('copyLink: No selected project!')
   const project = state.selectedProject
   if ( project.status !== 'deployed') {
     error({parentWin: state.mainWindow, message: 'Project has not been deployed.\r\n\r\nDeploy the project before attempting to copy the link'})
-    return console.error('copyLink: The project has not been deployed.')
+    return log.debug('copyLink: The project has not been deployed.')
   }
   const slug = slugify(state.selectedProject.title)
   const deployUrl = `${state.data.Settings.deployBaseUrl}/${slug}/preview.html`
@@ -180,13 +183,13 @@ export function copyPreviewLink() {
 }
 
 export function removeFromList() {
-  if ( !state.selectedProject ) return console.error('removeFromList: No selected project!')
+  if ( !state.selectedProject ) return log.debug('removeFromList: No selected project!')
   dispatch('project_remove', state.selectedProject.id)
 }
 
 export function removeFromServer() {
   const p = state.selectedProject
-  if ( !p ) return console.error('removeFromServer: No selected project!')
+  if ( !p ) return log.debug('removeFromServer: No selected project!')
 
   dialog.showMessageBox(
     state.mainWindow,
@@ -198,7 +201,7 @@ export function removeFromServer() {
     }, (resp) => {
       if ( resp === 0 ) return
 
-      console.log('removeFromServer')
+      log.debug('removeFromServer')
       dispatch( 'project_status', [project.id, 'deploying'] )
       run('project_undeploy', { project, settings: state.data.Settings, userData: app.getPath('userData') })
         .then((p) => {
@@ -213,8 +216,8 @@ export function removeFromServer() {
 
 export function deleteAll() {
   const p = state.selectedProject
-  if ( !p ) return console.error('deleteAll: No selected project!')
-  const projectPath = expandHomeDir(state.selectedProject.path)
+  if ( !p ) return log.debug('deleteAll: No selected project!')
+  const projectPath = expandHomeDir(state.selectedProject.path, app.getPath('home'))
 
   dialog.showMessageBox(
     state.mainWindow,
@@ -225,7 +228,7 @@ export function deleteAll() {
       message: "This will delete the project from your hard drive; there is no undo!\r\n\r\nAre you sure you want to do this?",
     }, (resp) => {
       if ( resp === 0 ) return
-      rmrf(projectPath, (err) => {
+      fs.remove(projectPath, (err) => {
         if (err) dispatch('project_error', [p.id, err.toString()])
         else dispatch('project_remove', p.id)
       })
@@ -238,7 +241,7 @@ export function editSettings() {
     ? `http://localhost:9080/#settings`
     : `file://${__dirname}/index.html#settings`
 
-  const winWidth = 520
+  const winWidth = process.platform === 'win32' ? 580 : 520
   const winHeight = 512
 
   state.settingsWindow = new BrowserWindow({
@@ -287,7 +290,7 @@ export function installAi2html(parentWin) {
 export function clearState() {
   storage.clear(() => {
     storage.load((err, data) => {
-      console.log(data)
+      log.debug(data)
       state.data = data
       resetState(data)
     })

@@ -1,11 +1,15 @@
 import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import path from 'path'
+import log from 'electron-log'
 import Menubar from './menus/Menubar'
 import storage from './storage'
 import worker from './workers'
 import { dispatch } from './ipc'
 import { checkOnLaunch } from './install_ai_plugin'
 import { getStaticPath } from '../lib'
+
+log.catchErrors()
 
 const state = {
   ready: false,
@@ -22,19 +26,6 @@ export default state
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
-
-function appReady (launchInfo) {
-  state.ready = true
-  storage.load((error, data) => {
-    state.data = data
-    state.selectedProject = data.Projects.find(p => p.focus)
-    createWindow()
-    Menu.setApplicationMenu( Menubar() )
-
-  })
-}
-
-app.on('ready', appReady)
 
 function createWindow () {
   if ( state.mainWindow ) return
@@ -78,35 +69,60 @@ function createWindow () {
   state.mainWindow.on('ready-to-show', () => state.mainWindow.show())
 }
 
-app.on('before-quit', () => state.quitting = true)
+function setupEventHandlers() {
+  app.on('before-quit', () => state.quitting = true)
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
-})
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') app.quit()
+  })
 
-app.on('activate', () => {
-  if (!state.ready || !state.data) return;
-  if (state.mainWindow) state.mainWindow.show()
-  else if (state.mainWindow === null) createWindow()
-})
+  app.on('activate', () => {
+    if (!state.ready || !state.data) return;
+    if (state.mainWindow) state.mainWindow.show()
+    else if (state.mainWindow === null) createWindow()
+  })
 
-/**
- * Auto Updater
- *
- * Uncomment the following code below and install `electron-updater` to
- * support auto updating. Code Signing with a valid certificate is required.
- * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-electron-builder.html#auto-updating
- */
+  app.on('ready', () => {
+    state.ready = true
 
-import { autoUpdater } from 'electron-updater'
+    // Load app preferences then open the main window
+    storage.load((error, data) => {
+      state.data = data
+      state.selectedProject = data.Projects.find(p => p.focus)
+      createWindow()
+      Menu.setApplicationMenu( Menubar() )
+    })
 
-app.on('ready', () => {
-  if (process.env.NODE_ENV === 'production') {
-    // This is supposedly unnecessary. But it doesn't work without it.
-    autoUpdater.channel = AUTOUPDATE_CHANNEL
-    autoUpdater.allowDowngrade = false
-    autoUpdater.setFeedURL('https://apps.voxmedia.com/vizapp/')
+    // Setup autoupdates
+    if (process.env.NODE_ENV === 'production') {
+      // This is supposedly unnecessary. But it doesn't work without it.
+      autoUpdater.channel = AUTOUPDATE_CHANNEL
+      autoUpdater.allowDowngrade = false
+      autoUpdater.setFeedURL('https://apps.voxmedia.com/vizapp/')
 
-    autoUpdater.checkForUpdatesAndNotify()
+      autoUpdater.checkForUpdatesAndNotify()
+    }
+  })
+}
+
+// MacOS prevents multiple instances of the app running, but for other OSes
+// we have to manage it ourselves.
+if ( process.platform === 'darwin' ) {
+  setupEventHandlers()
+} else {
+  const singleInstanceLock = app.requestSingleInstanceLock()
+  if ( !singleInstanceLock ) {
+    // App is already running, so quit.
+    app.quit()
+  } else {
+    setupEventHandlers()
+    // If a second instance attempts to run, restore and focus this instance's
+    // main window.
+    app.on('second-instance', () => {
+      if ( state.mainWindow.isMinimized() ) {
+        state.mainWindow.restore()
+      }
+      state.mainWindow.focus()
+    })
   }
-})
+}

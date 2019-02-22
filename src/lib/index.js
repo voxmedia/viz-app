@@ -6,21 +6,23 @@ import { pipeline } from 'stream'
 
 const HOMEDIR = process.env[process.platform == 'win32' ? 'HOMEPATH' : 'HOME']
 
-export function expandHomeDir (p) {
+export function expandHomeDir (p, homedir) {
   if (!p) return p;
+  if (!homedir) homedir = HOMEDIR
   if (process.platform == 'win32') {
-    return p.replace('%HOMEPATH%', HOMEDIR)
+    return p.replace('%HOMEPATH%', homedir)
   } else {
-    return p.replace(/^~\//, `${HOMEDIR}/`)
+    return p.replace(/^~\//, `${homedir}/`)
   }
 }
 
-export function compactHomeDir (p) {
+export function compactHomeDir (p, homedir) {
   if (!p) return p;
+  if (!homedir) homedir = HOMEDIR
   if (process.platform == 'win32') {
-    return p.replace(HOMEDIR, '%HOMEPATH%')
+    return p
   } else {
-    return p.replace(HOMEDIR, '~')
+    return p.replace(homedir, '~')
   }
 }
 

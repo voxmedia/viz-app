@@ -1,5 +1,13 @@
 <template>
-  <div :class="classes" :tabindex="tabindex()" @focus="handleFocus" @blur="handleBlur" @drop="handleDrop" @dragover="handleDragOver" @dragleave="handleDragLeave">
+  <div
+    :class="classes"
+    :tabindex="tabindex()"
+    @focus="handleFocus"
+    @blur="handleBlur"
+    @dragenter="handleDragEnter"
+    @dragover="handleDragOver"
+    @dragleave="handleDragLeave"
+    @drop="handleDrop">
     <div class="inner-list" :style="listHeight">
       <div v-for="item in items">
         <project-list-item :project="item"></project-list-item>
@@ -33,6 +41,7 @@
         return `height: calc(100vh - ${toolbarHeight}px)`
       },
       classes() {
+        console.log('compute classes')
         const ret = ['list']
         if ( this.dragging ) ret.push('dragging')
         return ret
@@ -42,19 +51,27 @@
       handleFocus(eve) { this.$emit('focus', eve) },
       handleBlur(eve) { this.$emit('blur', eve) },
       handleDrop(eve) {
+        console.log('drop')
         eve.preventDefault()
         const files = []
         for (const f of eve.dataTransfer.files) files.push(f.path)
         ipcRenderer.send('add-projects', files)
-        this.dragging = false
+        if ( this.dragging !== false ) this.dragging = false
       },
       handleDragOver(eve) {
-        this.dragging = true
+        console.log('dragOver')
         eve.preventDefault()
+        if ( this.dragging !== true ) this.dragging = true
+      },
+      handleDragEnter(eve) {
+        console.log('dragEnter')
+        eve.preventDefault()
+        if ( this.dragging !== true ) this.dragging = true
       },
       handleDragLeave(eve) {
-        this.dragging = false
+        console.log('dragLeave')
         eve.preventDefault()
+        if ( this.dragging !== false ) this.dragging = false
       },
     },
   }
@@ -87,6 +104,17 @@
   font-size:72px;
   justify-content:center;
   align-items:center;
+}
+
+.drag-cover:after {
+    display:block;
+    content:'';
+    position:absolute;
+    top:2%; right:2%; bottom:2%; left:2%;
+    border-radius:18px;
+    border-width:6px;
+    border-color:#3f526b;
+    border-style:solid;
 }
 
 .inner-list > div + div { border-top: 1px solid #efefef; }
