@@ -1,5 +1,6 @@
 <template>
   <div
+    id="project-list"
     :class="classes"
     :tabindex="tabindex()"
     @focus="handleFocus"
@@ -8,12 +9,12 @@
     @dragover="handleDragOver"
     @dragleave="handleDragLeave"
     @drop="handleDrop">
-    <div class="inner-list" :style="listHeight">
+    <div id="project-inner-list" class="inner-list" :style="listHeight">
       <div v-for="item in items">
         <project-list-item :project="item"></project-list-item>
       </div>
     </div>
-    <div class="drag-cover">
+    <div id="project-list-cover" class="drag-cover">
       <i class="icon icon-download"></i>
     </div>
   </div>
@@ -41,7 +42,6 @@
         return `height: calc(100vh - ${toolbarHeight}px)`
       },
       classes() {
-        console.log('compute classes')
         const ret = ['list']
         if ( this.dragging ) ret.push('dragging')
         return ret
@@ -51,27 +51,28 @@
       handleFocus(eve) { this.$emit('focus', eve) },
       handleBlur(eve) { this.$emit('blur', eve) },
       handleDrop(eve) {
-        console.log('drop')
         eve.preventDefault()
         const files = []
         for (const f of eve.dataTransfer.files) files.push(f.path)
         ipcRenderer.send('add-projects', files)
-        if ( this.dragging !== false ) this.dragging = false
+        this.dragging = false
       },
       handleDragOver(eve) {
-        console.log('dragOver')
         eve.preventDefault()
+        if ( eve.dataTransfer.dropEffect !== 'link' )
+          eve.dataTransfer.dropEffect = "link"
         if ( this.dragging !== true ) this.dragging = true
       },
       handleDragEnter(eve) {
-        console.log('dragEnter')
         eve.preventDefault()
+        if ( eve.dataTransfer.dropEffect !== 'link' )
+          eve.dataTransfer.dropEffect = "link"
         if ( this.dragging !== true ) this.dragging = true
       },
       handleDragLeave(eve) {
-        console.log('dragLeave')
+        if ( eve.target.id !== 'project-list-cover' ) return
         eve.preventDefault()
-        if ( this.dragging !== false ) this.dragging = false
+        this.dragging = false
       },
     },
   }
