@@ -92,7 +92,6 @@
         return hashes.installedHash != hashes.newHash
       },
       handleInput(eve) {
-        console.log('recieve input')
         const val = eve.target.value
         const key = eve.target.name
         const store = this.$store

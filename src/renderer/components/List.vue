@@ -1,11 +1,20 @@
 <template>
-  <div :class="classes" :tabindex="tabindex()" @focus="handleFocus" @blur="handleBlur" @drop="handleDrop" @dragover="handleDragOver" @dragleave="handleDragLeave">
-    <div class="inner-list" :style="listHeight">
+  <div
+    id="project-list"
+    :class="classes"
+    :tabindex="tabindex()"
+    @focus="handleFocus"
+    @blur="handleBlur"
+    @dragenter="handleDragEnter"
+    @dragover="handleDragOver"
+    @dragleave="handleDragLeave"
+    @drop="handleDrop">
+    <div id="project-inner-list" class="inner-list" :style="listHeight">
       <div v-for="item in items">
         <project-list-item :project="item"></project-list-item>
       </div>
     </div>
-    <div class="drag-cover">
+    <div id="project-list-cover" class="drag-cover">
       <i class="icon icon-download"></i>
     </div>
   </div>
@@ -49,12 +58,21 @@
         this.dragging = false
       },
       handleDragOver(eve) {
-        this.dragging = true
         eve.preventDefault()
+        if ( eve.dataTransfer.dropEffect !== 'link' )
+          eve.dataTransfer.dropEffect = "link"
+        if ( this.dragging !== true ) this.dragging = true
+      },
+      handleDragEnter(eve) {
+        eve.preventDefault()
+        if ( eve.dataTransfer.dropEffect !== 'link' )
+          eve.dataTransfer.dropEffect = "link"
+        if ( this.dragging !== true ) this.dragging = true
       },
       handleDragLeave(eve) {
-        this.dragging = false
+        if ( eve.target.id !== 'project-list-cover' ) return
         eve.preventDefault()
+        this.dragging = false
       },
     },
   }
@@ -87,6 +105,17 @@
   font-size:72px;
   justify-content:center;
   align-items:center;
+}
+
+.drag-cover:after {
+    display:block;
+    content:'';
+    position:absolute;
+    top:2%; right:2%; bottom:2%; left:2%;
+    border-radius:18px;
+    border-width:6px;
+    border-color:#3f526b;
+    border-style:solid;
 }
 
 .inner-list > div + div { border-top: 1px solid #efefef; }

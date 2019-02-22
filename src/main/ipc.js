@@ -1,5 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import ProjectContextMenu from './menus/ProjectContextMenu'
+import InputContextMenu from './menus/InputContextMenu'
 import state from './index'
 import storage from './storage'
 import { newProject, addProjects, deployProject, editSettings, installAi2html, openInIllustrator, importSettings, resetSettings } from './actions'
@@ -25,6 +26,13 @@ ipcMain.on( 'get-hashes', (eve) => {
 // Async messages
 ipcMain.on( 'project-context-menu', (event, arg) => {
   const menu = ProjectContextMenu(arg)
+  const win = BrowserWindow.fromWebContents(event.sender)
+  menu.popup({window: win, async: true})
+  event.sender.send('context-menu-close', arg)
+} )
+
+ipcMain.on( 'input-context-menu', (event, arg) => {
+  const menu = InputContextMenu(arg)
   const win = BrowserWindow.fromWebContents(event.sender)
   menu.popup({window: win, async: true})
   event.sender.send('context-menu-close', arg)

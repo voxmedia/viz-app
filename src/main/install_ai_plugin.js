@@ -1,45 +1,67 @@
 import fs from 'fs'
 import path from 'path'
-import {dialog} from 'electron'
-import state from './index'
+import {dialog, app} from 'electron'
+import log from 'electron-log'
 import crypto from 'crypto'
+import sudo from 'sudo-prompt'
+
+import state from './index'
 import { dispatch } from './ipc'
 import { alert, confirm, error, chooseFolder } from './dialogs'
 import { render } from '../lib'
+import PACKAGE_INFO from '../../package.json'
 
 const PATHS = {
   'darwin': [
-    '/Applications/Adobe Illustrator CC 2018/Adobe Illustrator.app',
-    '/Applications/Adobe Illustrator CC 2017/Adobe Illustrator.app',
-    '/Applications/Adobe Illustrator CC 2015/Adobe Illustrator.app',
-    '/Applications/Adobe Illustrator CC 2014/Adobe Illustrator.app',
-    '~/Applications/Adobe Illustrator CC 2018/Adobe Illustrator.app',
-    '~/Applications/Adobe Illustrator CC 2017/Adobe Illustrator.app',
-    '~/Applications/Adobe Illustrator CC 2015/Adobe Illustrator.app',
-    '~/Applications/Adobe Illustrator CC 2014/Adobe Illustrator.app',
+    '/Applications/Adobe Illustrator CC 2019',
+    '/Applications/Adobe Illustrator CC 2018',
+    '/Applications/Adobe Illustrator CC 2017',
+    '/Applications/Adobe Illustrator CC 2015',
+    '/Applications/Adobe Illustrator CC 2014',
+    '~/Applications/Adobe Illustrator CC 2019',
+    '~/Applications/Adobe Illustrator CC 2018',
+    '~/Applications/Adobe Illustrator CC 2017',
+    '~/Applications/Adobe Illustrator CC 2015',
+    '~/Applications/Adobe Illustrator CC 2014',
   ],
+  'win32': [
+    'C:\\Program Files\\Adobe\\Adobe Illustrator CC 2019',
+    'C:\\Program Files\\Adobe\\Adobe Illustrator CC 2018',
+    'C:\\Program Files\\Adobe\\Adobe Illustrator CC 2017',
+    'C:\\Program Files\\Adobe\\Adobe Illustrator CC 2015',
+    'C:\\Program Files\\Adobe\\Adobe Illustrator CC 2014',
+  ]
 }
 
 const HASH_ALGO = 'sha1'
+const SUDO_OPTS = {
+  name: PACKAGE_INFO.build.productName,
+  icns: PACKAGE_INFO.build.mac.icon // TODO: figure out how this path works
+}
 
 let DEFAULT_PROGRAMS_DIR = null
 let SCRIPTS_DIR = null
+let COPY_CMD = null
 if ( process.platform === 'darwin' ) {
   DEFAULT_PROGRAMS_DIR = '/Applications'
   SCRIPTS_DIR = 'Presets.localized/en_US/Scripts'
+  COPY_CMD = 'cp'
 } else if ( process.platform === 'win32' ) {
   DEFAULT_PROGRAMS_DIR = 'C:\\Program Files\\'
   SCRIPTS_DIR = 'Presets\\en_US\\Scripts'
+  COPY_CMD = 'copy'
 }
 
 function guessAppPath() {
   if ( process.platform in PATHS ) {
     let appPath = PATHS[process.platform].find((path) => fs.existsSync(path))
     if ( appPath ) {
-      return Promise.resolve(path.dirname(appPath))
+      return Promise.resolve(appPath)
     } else {
       return Promise.reject()
     }
+  } else {
+    return Promise.reject()
   }
 }
 
@@ -59,7 +81,7 @@ function findScriptsPath(appPath) {
   const scriptsPath = path.join(appPath, SCRIPTS_DIR)
 
   if ( !fs.existsSync(scriptsPath) || !fs.statSync(scriptsPath).isDirectory() ) {
-    console.error("Can't find Adobe Illustrator scripts folder. Looked here: ", scriptsPath)
+    log.error("Can't find Adobe Illustrator scripts folder. Looked here: ", scriptsPath)
     return Promise.reject(new Error('Adobe Illustrator Scripts folder is missing.'))
   }
 
@@ -72,9 +94,18 @@ function renderAi2htmlScript() {
 
 function copyScript(scriptsPath) {
   const output = renderAi2htmlScript()
+  const tempDest = path.join(app.getPath('userData'), 'ai2html.js')
   const dest = path.join(scriptsPath, 'ai2html.js')
-  fs.writeFileSync(dest, output)
-  return Promise.resolve(scriptsPath)
+  fs.writeFileSync(tempDest, output)
+  return new Promise((resolve, reject) => {
+    const command = `${COPY_CMD} "${tempDest}" "${dest}"`
+    sudo.exec(command, SUDO_OPTS, (error, stdout, stderr) => {
+      if (error)
+        reject(new Error("Failed to install AI2HTML plugin"))
+      else
+        resolve(scriptsPath)
+    })
+  })
 }
 
 function calcHash(filename) {
@@ -150,15 +181,19 @@ export function install({parentWin = null, forceInstall = false} = {}) {
         dispatch('updateSettings', {scriptInstallPath: path})
       },
       (err) => {
-        if ( err.code && err.code == 'EACCES' ) {
-          error({
-            parentWin,
-            message: `The ai2html script install failed.\n\nYou do not have permission to install the plugin.\n\nPlease give yourself write access to ${path.dirname(err.path)}`,
-            details: err.toString()
-          })
+        log.error('install script failed', err)
+        if ( err ) {
+          if ( err.code && (err.code == 'EACCES' || err.code == 'EPERM') ) {
+            error({
+              parentWin,
+              message: `The ai2html script install failed.\n\nYou do not have permission to install the plugin.\n\nPlease give yourself write access to ${path.dirname(err.path)}`,
+              details: err.toString()
+            })
+          } else {
+            error({parentWin, message: `The ai2html script install failed.\n\n${err.toString()}`})
+          }
         } else {
-          console.error('install script failed', err)
-          error({parentWin, message: 'The ai2html script install failed.', details: err.toString()})
+          error({parentWin, message: `The ai2html script install failed.`})
         }
       }
     )

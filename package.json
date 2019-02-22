@@ -14,7 +14,7 @@
     "build:dir": "node .electron-vue/build.js && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
-    "build:publish": "node .electron-vue/build.js && electron-builder --mac -p always",
+    "build:publish": "node .electron-vue/build.js && electron-builder -mw -p always",
     "electronbuild": "electron-builder",
     "dev": "node .electron-vue/dev-runner.js",
     "e2e": "npm run pack && mocha test/e2e",
@@ -43,7 +43,7 @@
     },
     "win": {
       "icon": "build/icons/icon.ico",
-      "target": "portable"
+      "target": "nsis"
     },
     "linux": {
       "icon": "build/icons",
@@ -67,15 +67,16 @@
     "at-ui-style": "^1.5.1",
     "aws-sdk": "^2.229.1",
     "electron-json-storage": "^4.1.1",
-    "electron-log": "^2.2.14",
+    "electron-log": "^3.0.1",
     "electron-updater": "^3.0.3",
     "glob": "^7.1.2",
     "glob-copy": "^0.1.0",
     "js-yaml": "^3.11.0",
     "lodash": "^4.17.10",
     "luxon": "^1.0.0",
-    "rimraf": "^2.6.2",
+    "node-fs-extra": "^0.8.2",
     "s3-client-control": "^4.5.2",
+    "sudo-prompt": "^8.2.5",
     "underscore.string": "^3.3.4",
     "uuid": "^3.2.1",
     "vue": "^2.3.3",

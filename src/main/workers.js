@@ -1,4 +1,5 @@
 import fs from 'fs'
+import log from 'electron-log'
 import { app } from 'electron'
 import { fork } from 'child_process'
 import { join } from 'path'
@@ -21,7 +22,7 @@ if ( process.env.NODE_ENV === 'development' ) {
   // When running in production, we have to copy the worker script to a different
   // location to run. We can't fork it directly.
   const asarPath = join(__dirname, 'worker.js')
-  WORKER_PATH = join(app.getPath('appData'), 'tmpworker.js')
+  WORKER_PATH = join(app.getPath('userData'), 'tmpworker.js')
   fs.writeFileSync(WORKER_PATH, fs.readFileSync(asarPath))
 }
 
@@ -53,7 +54,7 @@ function createWorker() {
       if ( uses > WORKER_USE_LIMIT ) proc.kill()
       else status = 'ready'
     } else {
-      console.error("Unknown message", args)
+      log.error("Unknown message", args)
     }
   })
 
@@ -62,7 +63,7 @@ function createWorker() {
   })
 
   proc.on('error', (err) => {
-    console.error('Error in worker', err);
+    log.error('Error in worker', err);
     proc.kill()
     if ( status === 'working' )
       emitter.emit('job-finish', 'fail', err)
