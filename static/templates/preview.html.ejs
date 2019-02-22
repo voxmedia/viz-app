@@ -53,7 +53,8 @@
       border:1px solid #2e2e2e;
       background-color: white;
       box-shadow:0 2px 10px black;
-      overflow:auto;
+      overflow-y:scroll;
+      overflow-x:auto;
       padding:0 16px;
       box-sizing:border-box;
       resize:both;
@@ -121,6 +122,32 @@
       'desktop': [771.917, 700],
     }
 
+    // https://stackoverflow.com/questions/39392423/calculating-width-of-scrollbar-and-using-result-in-calc-css
+    function getScrollbarWidth() {
+      var outer = document.createElement("div");
+      outer.style.visibility = "hidden";
+      outer.style.width = "100px";
+      outer.style.msOverflowStyle = "scrollbar"; // needed for WinJS apps
+
+      document.body.appendChild(outer);
+
+      var widthNoScroll = outer.offsetWidth;
+      // force scrollbars
+      outer.style.overflow = "scroll";
+
+      // add innerdiv
+      var inner = document.createElement("div");
+      inner.style.width = "100%";
+      outer.appendChild(inner);        
+
+      var widthWithScroll = inner.offsetWidth;
+
+      // remove divs
+      outer.parentNode.removeChild(outer);
+
+      return widthNoScroll - widthWithScroll;
+    }
+
     function setPreset(preset) {
       if ( preset in PRESETS )
         setSize(PRESETS[preset][0], PRESETS[preset][1])
@@ -133,7 +160,9 @@
       updateDimensionsDisplay()
 
       var main = document.querySelector('main')
-      main.style.width = width == 'auto' ? width : (width + 2) + 'px'
+      // in setting sizes, add 2 for borders and the width of a scrollbar
+      var pad = 2 + getScrollbarWidth()
+      main.style.width = width == 'auto' ? width : (width + pad) + 'px'
       main.style.height = height == 'auto' ? height : (height + 2) + 'px'
     }
 
@@ -142,7 +171,7 @@
       var borderWidth = 1
       var gutterWidth = 16
       var height = main.offsetHeight - (2*borderWidth)
-      var width = main.offsetWidth - (2*borderWidth)
+      var width = main.offsetWidth - (2*borderWidth) - getScrollbarWidth()
       var dim = document.querySelector('.dimensions .browser-window')
       dim.innerText = width + ' x ' + height
       var dim = document.querySelector('.dimensions .graphic-width')
