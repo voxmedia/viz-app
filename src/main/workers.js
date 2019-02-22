@@ -1,4 +1,5 @@
 import fs from 'fs'
+import log from 'electron-log'
 import { app } from 'electron'
 import { fork } from 'child_process'
 import { join } from 'path'
@@ -53,7 +54,7 @@ function createWorker() {
       if ( uses > WORKER_USE_LIMIT ) proc.kill()
       else status = 'ready'
     } else {
-      console.error("Unknown message", args)
+      log.error("Unknown message", args)
     }
   })
 
@@ -62,7 +63,7 @@ function createWorker() {
   })
 
   proc.on('error', (err) => {
-    console.error('Error in worker', err);
+    log.error('Error in worker', err);
     proc.kill()
     if ( status === 'working' )
       emitter.emit('job-finish', 'fail', err)
