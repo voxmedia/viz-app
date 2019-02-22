@@ -14,7 +14,7 @@
     "build:dir": "node .electron-vue/build.js && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
-    "build:publish": "node .electron-vue/build.js && electron-builder --mac -p always",
+    "build:publish": "node .electron-vue/build.js && electron-builder -mw -p always",
     "electronbuild": "electron-builder",
     "dev": "node .electron-vue/dev-runner.js",
     "e2e": "npm run pack && mocha test/e2e",
@@ -43,7 +43,7 @@
     },
     "win": {
       "icon": "build/icons/icon.ico",
-      "target": "portable"
+      "target": "nsis"
     },
     "linux": {
       "icon": "build/icons",
