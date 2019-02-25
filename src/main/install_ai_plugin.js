@@ -11,6 +11,8 @@ import { alert, confirm, error, chooseFolder } from './dialogs'
 import { render } from '../lib'
 import PACKAGE_INFO from '../../package.json'
 
+// Known install paths of Adobe Illustrator. We'll check these to see if AI is
+// installed.
 const PATHS = {
   'darwin': [
     '/Applications/Adobe Illustrator CC 2019',
@@ -33,10 +35,21 @@ const PATHS = {
   ]
 }
 
+// Hash algorithm used to compute a hash of the ai2html plugin to detect if
+// and update is needed
 const HASH_ALGO = 'sha1'
+
+// For Mac OS X the sudo prompt likes an icon, when in production, we need to
+// generate a path to the installed app package icon.
+let MACOS_SUDO_ICON = null
+if ( process.env.NODE_ENV === 'production' ) {
+  MACOS_SUDO_ICON = path.join(path.dirname(app.getAppPath()), 'Vizier.icns')
+} else {
+  MACOS_SUDO_ICON = PACKAGE_INFO.build.mac.icon
+}
 const SUDO_OPTS = {
   name: PACKAGE_INFO.build.productName,
-  icns: PACKAGE_INFO.build.mac.icon // TODO: figure out how this path works
+  icns: MACOS_SUDO_ICON
 }
 
 let DEFAULT_PROGRAMS_DIR = null
@@ -52,6 +65,7 @@ if ( process.platform === 'darwin' ) {
   COPY_CMD = 'copy'
 }
 
+// Try to guess the path to Adobe Illustrator
 function guessAppPath() {
   if ( process.platform in PATHS ) {
     let appPath = PATHS[process.platform].find((path) => fs.existsSync(path))
@@ -65,6 +79,7 @@ function guessAppPath() {
   }
 }
 
+// Ask the user to identify the installed path to Adobe Illustrator
 function chooseAppPath(parentWin) {
   const message = "Can't find the Adobe Illustrator install location.\n\nClick 'Choose Illustrator Folder' to specify the install location yourself, or cancel installation."
   return confirm({parentWin, message, confirmLabel: 'Choose Illustrator Folder'})
@@ -77,6 +92,7 @@ function chooseAppPath(parentWin) {
     })
 }
 
+// Find the scripts subdirectory of the installed adobe illustrator
 function findScriptsPath(appPath) {
   const scriptsPath = path.join(appPath, SCRIPTS_DIR)
 
@@ -88,10 +104,13 @@ function findScriptsPath(appPath) {
   return Promise.resolve(scriptsPath)
 }
 
+// Generate the ai2html script from a template
 function renderAi2htmlScript() {
   return render('ai2html.js.ejs', {settings: state.data.Settings})
 }
 
+// Save the generated ai2html script to a temp location, then try to copy into
+// Adobe Illustrator with escalated permissions.
 function copyScript(scriptsPath) {
   const output = renderAi2htmlScript()
   const tempDest = path.join(app.getPath('userData'), 'ai2html.js')
@@ -100,14 +119,17 @@ function copyScript(scriptsPath) {
   return new Promise((resolve, reject) => {
     const command = `${COPY_CMD} "${tempDest}" "${dest}"`
     sudo.exec(command, SUDO_OPTS, (error, stdout, stderr) => {
-      if (error)
+      if (error) {
+        log.error('Sudo install ai2html plugin failed', error, stdout, stderr)
         reject(new Error("Failed to install AI2HTML plugin"))
-      else
+      } else {
         resolve(scriptsPath)
+      }
     })
   })
 }
 
+// Calculate the hash of a file
 function calcHash(filename) {
   return new Promise((resolve, reject) => {
     if ( !fs.existsSync(filename) ) return reject(`File not found ${filename}`)
@@ -121,6 +143,7 @@ function calcHash(filename) {
   })
 }
 
+// Calculate the hash of the installed ai2html script
 export function calcInstalledHash() {
   const installPath = state.data.Settings.scriptInstallPath
   if ( !installPath || !fs.existsSync(installPath) ) return null
@@ -131,12 +154,14 @@ export function calcInstalledHash() {
   return hash.digest('hex')
 }
 
+// Calculate the hash of a freshly generated ai2html script
 export function calcNewHash() {
   const hash = crypto.createHash(HASH_ALGO)
   hash.update(renderAi2htmlScript())
   return hash.digest('hex')
 }
 
+// Do all the things to get ai2html installed
 export function install({parentWin = null, forceInstall = false} = {}) {
   const startupCheck = state.data.Settings.disableAi2htmlStartupCheck
   const installPath = state.data.Settings.scriptInstallPath
@@ -200,6 +225,7 @@ export function install({parentWin = null, forceInstall = false} = {}) {
   })
 }
 
+// Check if ai2html needs an update and prompt the user
 export function checkOnLaunch() {
   // Calculate and stash these hashes at launch
   state.installedAi2htmlHash = calcInstalledHash()
