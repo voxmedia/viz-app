@@ -344,7 +344,7 @@ export function importSettings() {
 }
 
 export function openLog() {
-  const filename = path.join(app.getPath('userData'), 'log.log')
+  const filename = path.join(app.getPath('logs'), 'log.log')
   if ( fs.existsSync(filename) ) {
     shell.openItem(filename)
   } else {
