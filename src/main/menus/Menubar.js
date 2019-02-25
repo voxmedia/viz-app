@@ -1,7 +1,7 @@
 import path from 'path'
 import fs from 'fs-extra'
 import {app, Menu, shell} from 'electron'
-import { newProject, openProject, editSettings, installAi2html, clearState, importSettings, openLog } from '../actions'
+import { newProject, openProject, editSettings, installAi2html, clearState, importSettings, openLog, checkForUpdates } from '../actions'
 import { alert } from '../dialogs'
 import state from '../index'
 import storage from '../storage'
@@ -14,6 +14,7 @@ const MACOS_APP_MENU_TEMPLATE = {
     {label: 'Preferences', click(eve) { editSettings() }},
     {label: 'Import preferences', click(eve) { importSettings() }},
     {label: 'Install ai2html', click(eve) { installAi2html() }},
+    {label: 'Check for updates', click(eve) { checkForUpdates({alertNoUpdates: true}) }},
     {type: 'separator'},
     {role: 'services', submenu: []},
     {type: 'separator'},
@@ -42,6 +43,7 @@ const FILE_MENU_TEMPLATE = {
     {label: 'Settings', click(eve) { editSettings() }},
     {label: 'Import settings', click(eve) { importSettings() }},
     {label: 'Install ai2html', click(eve) { installAi2html() }},
+    {label: 'Check for updates', click(eve) { checkForUpdates({alertNoUpdates: true}) }},
     {type: 'separator'},
     {role: 'quit'}
   ]
@@ -116,7 +118,7 @@ const MACOS_WINDOW_MENU_TEMPLATE = {
   ]
 }
 
-const HELP_MENU_TEMPLATE = {
+const MACOS_HELP_MENU_TEMPLATE = {
   role: 'help',
   submenu: [
     {
@@ -127,6 +129,22 @@ const HELP_MENU_TEMPLATE = {
       label: 'Open log',
       click () { openLog() }
     }
+  ]
+}
+
+const HELP_MENU_TEMPLATE = {
+  role: 'help',
+  submenu: [
+    {
+      label: 'Learn More',
+      click () { shell.openExternal('https://github.com/voxmedia/viz-app') }
+    },
+    {
+      label: 'Open log',
+      click () { openLog() }
+    },
+    {type: 'separator'},
+    {role: 'about'},
   ]
 }
 
@@ -145,7 +163,7 @@ if (process.env.NODE_ENV === 'development') {
     MACOS_EDIT_MENU_TEMPLATE,
     DEV_MENU_TEMPLATE,
     MACOS_WINDOW_MENU_TEMPLATE,
-    HELP_MENU_TEMPLATE
+    MACOS_HELP_MENU_TEMPLATE
   ]
 } else {
   MENUBAR_TEMPLATE = [
@@ -157,7 +175,7 @@ if (process.env.NODE_ENV === 'development') {
     MACOS_FILE_MENU_TEMPLATE,
     MACOS_EDIT_MENU_TEMPLATE,
     MACOS_WINDOW_MENU_TEMPLATE,
-    HELP_MENU_TEMPLATE
+    MACOS_HELP_MENU_TEMPLATE
   ]
 }
 

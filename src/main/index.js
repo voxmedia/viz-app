@@ -6,10 +6,12 @@ import storage from './storage'
 import worker from './workers'
 import { dispatch } from './ipc'
 import { checkOnLaunch } from './install_ai_plugin'
+import { checkForUpdates } from './actions'
 import { getStaticPath } from '../lib'
 
 log.catchErrors()
 
+// Global State struct for the app.
 const state = {
   ready: false,
   quitting: false,
@@ -17,11 +19,22 @@ const state = {
   settingsWindow: null,
   selectedProject: null,
   data: null,
-  staticPath: getStaticPath(),
+  staticPath: getStaticPath()
 }
-
 export default state
 
+// Configure the autoupdater.
+// Set the update channel. TODO: make a setting
+autoUpdater.channel = AUTOUPDATE_CHANNEL
+autoUpdater.allowDowngrade = false
+autoUpdater.autoInstallOnAppQuit = true
+autoUpdater.autoDownload = false
+// Use electron-log
+autoUpdater.logger = log
+// Docs say not to setFeedUrl, but doesn't work without it
+autoUpdater.setFeedURL('https://apps.voxmedia.com/vizapp/')
+
+// Set the main window URL
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
@@ -97,14 +110,8 @@ function setupEventHandlers() {
     })
 
     // Setup autoupdates
-    if (process.env.NODE_ENV === 'production') {
-      // This is supposedly unnecessary. But it doesn't work without it.
-      autoUpdater.channel = AUTOUPDATE_CHANNEL
-      autoUpdater.allowDowngrade = false
-      autoUpdater.setFeedURL('https://apps.voxmedia.com/vizapp/')
-
-      autoUpdater.checkForUpdatesAndNotify()
-    }
+    if (process.env.NODE_ENV === 'production')
+      checkForUpdates()
   })
 }
 

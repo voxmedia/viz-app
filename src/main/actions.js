@@ -1,10 +1,11 @@
-import { dialog, BrowserWindow, shell, app, clipboard } from 'electron'
+import { dialog, BrowserWindow, shell, app, clipboard, Notification } from 'electron'
 import uuid from 'uuid'
 import path from 'path'
 import fs from 'fs-extra'
 import { slugify } from 'underscore.string'
 import yaml from 'js-yaml'
 import log from 'electron-log'
+import { autoUpdater } from 'electron-updater'
 
 import { dispatch, resetState } from './ipc'
 import state from './index'
@@ -45,7 +46,7 @@ export function addProjects(filenames) {
       if ( !stats.isDirectory() ) {
         return error({
           parentWin: state.mainWindow,
-          message: `This type of file is not supported`,
+          message: 'This type of file is not supported',
           details: `File was ${filename}`,
         })
       }
@@ -350,4 +351,33 @@ export function openLog() {
   } else {
     alert({message: 'No log to open.'})
   }
+}
+
+export function checkForUpdates({alertNoUpdates = false} = {}) {
+  return autoUpdater.checkForUpdates()
+    .then(it => {
+      return confirm({
+        message: 'A new update is available. Do you wish to download and install it?',
+        confirmLabel: 'Install update'
+      }).then(() => {
+        return autoUpdater.downloadUpdate(it.cancellationToken)
+          .then(() => {
+            new Notification({
+              title: "Update is downloaded and ready to install",
+              body: `${this.app.name} version ${it.updateInfo.version} will be automatically installed on exit`
+            }).show()
+          }, (err) => {
+            log.error('Update download failed', err)
+            error({
+              message: 'Update download failed. Please check your internet connection and try again.'
+            })
+          })
+      }, () => {
+        log.debug('User declined update')
+      })
+    }, (err) => {
+      log.info(err)
+      if ( alertNoUpdates )
+        alert({ message: 'No updates are available for download.' })
+    })
 }
