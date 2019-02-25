@@ -24,7 +24,12 @@ command -v jq >/dev/null 2>&1 || { echo >&2 "Missing jq. Please install jq."; ex
 
 { rm package.json && jq --arg version $version '.version |= $version' > package.json; } < package.json
 
-read -p "Do you wish to commit the new version, tag and push? [y/N] " yn
-if echo "$yn" | grep -iq "^y"; then
+read -p "Do you wish to commit the new version, tag and push? [y/N] " tyn
+if echo "$tyn" | grep -iq "^y"; then
   git commit -am "bump to $version" && git tag v$version && git push && git push --tags
+
+  read -p "Do you wish to build and publish the release? [y/N] " pyn
+  if echo "$pyn" | grep -iq "^y"; then
+    yarn run build:publish
+  fi
 fi
