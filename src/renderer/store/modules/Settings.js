@@ -15,6 +15,9 @@ const state = {
   //  extraPreviewCss: null,
   //  extraEmbedCss: null,
   //  ai2htmlFonts: null,
+  //  ai2htmlCredit: null,
+  //  oembedProviderName: null,
+  //  oembedProviderUrl: null
 }
 
 const mutations = {

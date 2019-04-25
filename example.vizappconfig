@@ -53,3 +53,10 @@ extraEmbedCss: |-
 ai2htmlFonts: |-
   {"aifont":"FancySans-Bold","family":"'FancySans', helvetica, sans-serif","weight":"700","style":""},
   {"aifont":"FancySans-Book","family":"'FancySans', helvetica, sans-serif","weight":"400","style":""},
+
+# OPTIONAL. Set the default `credit` field for ai2html
+ai2htmlCredit: by Example Media
+
+# OPTIONAL. Include a `provider_name` and `provider_url` in the oembed response
+oembedProviderName: Example Media
+oembedProviderUrl: https://www.example.com

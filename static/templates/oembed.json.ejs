@@ -1,6 +1,8 @@
 {
 "version": "1.0",
 "type": "rich",
+<% if ( settings.oembedProviderName ) { %>"provider_name": "<%=settings.oembedProviderName %>",<% } %>
+<% if ( settings.oembedProviderUrl ) { %>"provider_url": "<%=settings.oembedProviderUrl %>",<% } %>
 "title": "<%=config.headline || project.title%>",
 "author_name": "<%=config.credit%>",
 "html": "<%=embed_code.replace(/"/g, '\\"')%>",

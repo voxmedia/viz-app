@@ -313,7 +313,8 @@ export function resetSettings() {
 const ALLOWED_KEYS = [
   'deployBaseUrl', 'deployType',
   'awsBucket', 'awsPrefix', 'awsRegion', 'awsAccessKeyId', 'awsSecretAccessKey',
-  'siteConfigName', 'extraPreviewCss', 'extraEmbedCss', 'ai2htmlFonts'
+  'siteConfigName', 'extraPreviewCss', 'extraEmbedCss',
+  'ai2htmlFonts', 'ai2htmlCredit', 'oembedProviderName', 'oembedProviderUrl'
 ]
 
 export function importSettings() {

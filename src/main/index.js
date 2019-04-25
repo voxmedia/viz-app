@@ -69,11 +69,11 @@ function createWindow () {
   })
 
   state.mainWindow.once('show', () => {
-    checkOnLaunch()
-
     // Setup autoupdates
     if (process.env.NODE_ENV === 'production')
       checkForUpdates()
+
+    checkOnLaunch()
   })
 
   state.mainWindow.on('closed', () => state.mainWindow = null)
