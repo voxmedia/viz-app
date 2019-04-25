@@ -1,6 +1,7 @@
 {
   "name": "vizier",
-  "version": "1.1.0-beta.1",
+  "productName": "Vizier",
+  "version": "1.1.0-beta.0",
   "author": "Ryan Mark <ryan.mark@voxmedia.com>",
   "description": "Create, manage and publish ai2html projects",
   "license": "BSD-3-Clause",
@@ -51,14 +52,14 @@
     },
     "publish": [
       {
-        "provider": "s3",
-        "bucket": "apps.voxmedia.com",
-        "path": "vizapp"
-      },
-      {
         "provider": "github",
         "owner": "voxmedia",
         "repo": "viz-app"
+      },
+      {
+        "provider": "s3",
+        "bucket": "apps.voxmedia.com",
+        "path": "vizapp"
       }
     ]
   },

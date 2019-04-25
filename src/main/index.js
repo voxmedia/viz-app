@@ -1,5 +1,4 @@
 import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron'
-import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 import Menubar from './menus/Menubar'
 import storage from './storage'
@@ -8,6 +7,8 @@ import { dispatch } from './ipc'
 import { checkOnLaunch } from './install_ai_plugin'
 import { checkForUpdates } from './actions'
 import { getStaticPath } from '../lib'
+
+import './autoupdate'
 
 log.catchErrors()
 
@@ -22,17 +23,6 @@ const state = {
   staticPath: getStaticPath()
 }
 export default state
-
-// Configure the autoupdater.
-// Set the update channel. TODO: make a setting
-autoUpdater.channel = AUTOUPDATE_CHANNEL
-autoUpdater.allowDowngrade = false
-autoUpdater.autoInstallOnAppQuit = true
-autoUpdater.autoDownload = false
-// Use electron-log
-autoUpdater.logger = log
-// Docs say not to setFeedUrl, but doesn't work without it
-autoUpdater.setFeedURL('https://apps.voxmedia.com/vizapp/')
 
 // Set the main window URL
 const winURL = process.env.NODE_ENV === 'development'
@@ -78,7 +68,13 @@ function createWindow () {
     }
   })
 
-  state.mainWindow.once('show', () => checkOnLaunch())
+  state.mainWindow.once('show', () => {
+    checkOnLaunch()
+
+    // Setup autoupdates
+    if (process.env.NODE_ENV === 'production')
+      checkForUpdates()
+  })
 
   state.mainWindow.on('closed', () => state.mainWindow = null)
   state.mainWindow.on('ready-to-show', () => state.mainWindow.show())
@@ -108,10 +104,6 @@ function setupEventHandlers() {
       if ( process.platform === 'darwin' )
         Menu.setApplicationMenu( Menubar() )
     })
-
-    // Setup autoupdates
-    if (process.env.NODE_ENV === 'production')
-      checkForUpdates()
   })
 }
 

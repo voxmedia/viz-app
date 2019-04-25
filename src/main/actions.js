@@ -355,29 +355,4 @@ export function openLog() {
 
 export function checkForUpdates({alertNoUpdates = false} = {}) {
   return autoUpdater.checkForUpdates()
-    .then(it => {
-      return confirm({
-        message: 'A new update is available. Do you wish to download and install it?',
-        confirmLabel: 'Install update'
-      }).then(() => {
-        return autoUpdater.downloadUpdate(it.cancellationToken)
-          .then(() => {
-            new Notification({
-              title: "Update is downloaded and ready to install",
-              body: `${this.app.name} version ${it.updateInfo.version} will be automatically installed on exit`
-            }).show()
-          }, (err) => {
-            log.error('Update download failed', err)
-            error({
-              message: 'Update download failed. Please check your internet connection and try again.'
-            })
-          })
-      }, () => {
-        log.debug('User declined update')
-      })
-    }, (err) => {
-      log.info(err)
-      if ( alertNoUpdates )
-        alert({ message: 'No updates are available for download.' })
-    })
 }
