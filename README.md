@@ -45,25 +45,25 @@ The config file is a valid `YAML` document with the extension `.vizappconfig`. [
 
 #### Developing
 
-This app uses Electron, Vue.js. Recommend using `yarn` instead of `npm`.
+This app uses Electron, Vue.js.
 
 Clone this repo, then:
 
 ``` bash
 # install dependencies
-yarn install
+npm install
 
 # serve with hot reload at localhost:9080
-yarn run dev
+npm run dev
 
 # build electron application for production
-yarn run build
+npm run build
 
 # run unit & end-to-end tests
-yarn test
+npm test
 
 # lint all JS/Vue component files in `src/`
-yarn run lint
+npm run lint
 ```
 
 #### Contributing
