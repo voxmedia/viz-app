@@ -63,7 +63,7 @@ function projectBuild({ project, settings }) {
 
     fs.writeFile(
       path.join(dest, 'oembed.json'),
-      render('oembed.json.ejs', { config, embed_code, project, embed_meta, slug, deploy_url }),
+      render('oembed.json.ejs', { config, embed_code, project, embed_meta, slug, deploy_url, settings }),
       end)
   })
 }
