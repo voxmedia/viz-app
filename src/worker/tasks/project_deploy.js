@@ -76,7 +76,7 @@ export default function projectDeploy({ project, settings }) {
     if (!settings.deployBaseUrl)
       return reject('Base deploy URL is missing. Please set this in settings.')
 
-    if (!settings.awsRegion)
+    if (!settings.awsRegion && !process.env.AWS_REGION)
       return reject('AWS Region is missing. Please set this in settings.')
 
     if (!settings.awsBucket)
