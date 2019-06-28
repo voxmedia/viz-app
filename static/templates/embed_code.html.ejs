@@ -4,7 +4,7 @@
      data-iframe-fallback="<%=fallback_img_url %>"
      data-iframe-fallback-width="<%=fallback_img_width %>"
      data-iframe-fallback-height="<%=fallback_img_height %>"
-     data-iframe="<%=deploy_url %>"
+     data-iframe="<%=deploy_url %>index.html"
      data-iframe-height="<%=height %>"
      <% if ( resizable ) { %>data-iframe-resizable<% } %>></div>
-<script type="text/javascript"><%=render('embed.js.ejs', {id: slug+'__graphic', url: deploy_url}) %></script>
+<script type="text/javascript"><%=render('embed.js.ejs', {id: slug+'__graphic', url: deploy_url+'index.html'}) %></script>
