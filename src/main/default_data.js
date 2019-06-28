@@ -19,6 +19,7 @@ const data = {
     "awsRegion": 'us-east-1',
     "awsAccessKeyId": null,
     "awsSecretAccessKey": null,
+    "awsCloudfrontDistributionId": null,
     "extraPreviewCss": null,
     "extraEmbedCss": null,
     "ai2htmlFonts": null,

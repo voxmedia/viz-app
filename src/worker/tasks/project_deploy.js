@@ -123,6 +123,35 @@ export default function projectDeploy({ project, settings }) {
           uploader.on('error', (err) => reject(err))
           uploader.on('end', () => resolve())
         })
+        .then(() => {
+          //console.log(settings.awsCloudfrontDistributionId);
+          if (settings.awsCloudfrontDistributionId) {
+            var random_string =  Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+            var cloudfront = new s3.AWS.CloudFront({apiVersion: '2018-11-05'});
+
+            var params = {
+              DistributionId: settings.awsCloudfrontDistributionId, /* required */
+              InvalidationBatch: {
+                CallerReference: random_string,
+                Paths: { 
+                  Quantity: 1,
+                  Items: [`/${settings.awsPrefix}/${slugify(project.title.trim())}/*`]
+                }
+              }
+            };
+            //console.log(params);
+            cloudfront.createInvalidation(params, function(err, data) {
+              if (err) console.log(err, err.stack); // an error occurred
+              else {
+                //console.log(data);
+                //console.log(data.Invalidation.InvalidationBatch.Paths);
+              }
+            });
+          }
+        }, err => {
+          reject(err)
+        })
       })
       .then(() => {
         resolve(project)
