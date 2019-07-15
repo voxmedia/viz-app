@@ -128,13 +128,21 @@ export default function projectDeploy({ project, settings }) {
           if (settings.awsCloudfrontDistributionId) {
             var random_string =  Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-            var cloudfront = new s3.AWS.CloudFront({apiVersion: '2018-11-05'});
+            const s3CloudfrontParams = {
+              apiVersion: '2018-11-05',
+              accessKeyId: settings.awsAccessKeyId || process.env.AWS_ACCESS_KEY_ID,
+              secretAccessKey: settings.awsSecretAccessKey || process.env.AWS_SECRET_ACCESS_KEY
+            }
+
+            console.log('Using access key:', settings.awsAccessKeyId)
+
+            var cloudfront = new s3.AWS.CloudFront(s3CloudfrontParams);
 
             var params = {
               DistributionId: settings.awsCloudfrontDistributionId, /* required */
               InvalidationBatch: {
                 CallerReference: random_string,
-                Paths: { 
+                Paths: {
                   Quantity: 1,
                   Items: [`/${settings.awsPrefix}/${slugify(project.title.trim())}/*`]
                 }

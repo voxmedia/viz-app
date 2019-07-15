@@ -243,7 +243,7 @@ export function editSettings() {
     : `file://${__dirname}/index.html#settings`
 
   const winWidth = process.platform === 'win32' ? 580 : 520
-  const winHeight = 512
+  const winHeight = 562
 
   state.settingsWindow = new BrowserWindow({
     //parent: state.mainWindow,

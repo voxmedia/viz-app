@@ -27,6 +27,7 @@
       <settings-input name="awsPrefix" placeholder="ex. graphics" @input="handleInput">AWS Path in&nbsp;bucket</settings-input>
 
       <settings-input name="awsRegion" placeholder="ex: us-east-1" @input="handleInput">AWS Region</settings-input>
+      <settings-input name="awsCloudfrontDistributionId" placeholder="ex: BMAKD31EXAMPLE" @input="handleInput">AWS Cloudfront distribution id (optional)</settings-input>
       <settings-input name="awsAccessKeyId" placeholder="ex: AKIAIOSFODNN7EXAMPLE" @input="handleInput">AWS Access Key&nbsp;ID</settings-input>
       <settings-input type="password" name="awsSecretAccessKey" placeholder="ex: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" @input="handleInput">AWS Secret Access&nbsp;Key</settings-input>
 
