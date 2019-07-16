@@ -22,6 +22,7 @@ const data = {
     "awsCloudfrontDistributionId": null,
     "extraPreviewCss": null,
     "extraEmbedCss": null,
+    "extraEmbedStylesheet": null,
     "ai2htmlFonts": null,
     "ai2htmlCredit": null,
     "oembedProviderName": null,

@@ -45,15 +45,16 @@ function projectBuild({ project, settings }) {
     const embed_meta = getEmbedMeta(config)
     const extra_preview_css = settings.extraPreviewCss || ''
     const extra_embed_css = settings.extraEmbedCss || ''
+    const extra_embed_stylesheet = settings.extraEmbedStylesheet || ''
 
     fs.writeFile(
       path.join(dest, 'index.html'),
-      render('embed.html.ejs', { config, content, project, embed_meta, slug, deploy_url, extra_embed_css }),
+      render('embed.html.ejs', { config, content, project, embed_meta, slug, deploy_url, extra_embed_css, extra_embed_stylesheet }),
       end)
 
     fs.writeFile(
       path.join(dest, 'preview.html'),
-      render('preview.html.ejs', { config, embed_code, project, embed_meta, slug, deploy_url, extra_preview_css }),
+      render('preview.html.ejs', { config, embed_code, project, embed_meta, slug, deploy_url, extra_preview_css, extra_embed_stylesheet }),
       end)
 
     fs.writeFile(
@@ -133,8 +134,6 @@ export default function projectDeploy({ project, settings }) {
               accessKeyId: settings.awsAccessKeyId || process.env.AWS_ACCESS_KEY_ID,
               secretAccessKey: settings.awsSecretAccessKey || process.env.AWS_SECRET_ACCESS_KEY
             }
-
-            console.log('Using access key:', settings.awsAccessKeyId)
 
             var cloudfront = new s3.AWS.CloudFront(s3CloudfrontParams);
 
