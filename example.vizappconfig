@@ -17,8 +17,8 @@ awsRegion: us-east-1
 # The AWS access key and ID needed to upload to these places. (Be careful sending passwords around!)
 awsAccessKeyId: null
 awsSecretAccessKey: null
-# (Optional) The distribution id to clear the CloudFront cache
-# Note: for this to work the AWS Access Key and Secret need to be set via environment vars.
+
+# OPTIONAL. The distribution id to clear the CloudFront cache
 awsCloudfrontDistributionId: null
 
 # REQUIRED. The site or brand name to display to the user so they know what config is loaded
