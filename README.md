@@ -6,7 +6,7 @@ A GUI for ai2html projects. Vizier makes it easy to use the [New York Times' ai2
 
 #### How to use it
 
-- [Download the most recent release](https://github.com/voxmedia/viz-app/releases).
+- [Download the most recent release](releases).
 - Make sure you adjust your [Mac OS X Gatekeeper settings to allow applications from anywhere](https://support.apple.com/en-us/HT202491).
 - The first time you run the app, you will be prompted to install ai2html. This will replace any
 previously installed ai2html.js script. If you installed Illustrator to a non-standard location
