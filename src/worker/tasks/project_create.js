@@ -11,5 +11,10 @@ export default function createProject({ project, settings }) {
       path.join(getStaticPath(), 'template.ai'),
       path.join(projectPath, project.title + '.ai')
     ).then(resolve).catch(reject)
+
+    streamCopyFile(
+      path.join(getStaticPath(), 'template_inquirer.html'),
+      path.join(projectPath, 'template_inquirer.html')
+    ).then(resolve).catch(reject)
   })
 }
