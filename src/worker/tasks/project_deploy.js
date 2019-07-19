@@ -45,16 +45,15 @@ function projectBuild({ project, settings }) {
     const embed_meta = getEmbedMeta(config)
     const extra_preview_css = settings.extraPreviewCss || ''
     const extra_embed_css = settings.extraEmbedCss || ''
-    const extra_embed_stylesheet = settings.extraEmbedStylesheet || ''
 
     fs.writeFile(
       path.join(dest, 'index.html'),
-      render('embed.html.ejs', { config, content, project, embed_meta, slug, deploy_url, extra_embed_css, extra_embed_stylesheet }),
+      render('embed.html.ejs', { config, content, project, embed_meta, slug, deploy_url, extra_embed_css }),
       end)
 
     fs.writeFile(
       path.join(dest, 'preview.html'),
-      render('preview.html.ejs', { config, embed_code, project, embed_meta, slug, deploy_url, extra_preview_css, extra_embed_stylesheet }),
+      render('preview.html.ejs', { config, embed_code, project, embed_meta, slug, deploy_url, extra_preview_css }),
       end)
 
     fs.writeFile(
