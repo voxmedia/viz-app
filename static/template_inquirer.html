@@ -52,6 +52,7 @@
     color: #666;
     display: block;
     text-align: left;
+    float: left;
     padding: 4px 0 0
   }
 
@@ -60,7 +61,12 @@
   }
 
   .credit {
-    text-align: right
+    text-align: right;
+    float: right;
+  }
+
+  .clear {
+    clear: both;
   }
 
   .axislabel {
@@ -95,4 +101,5 @@
 </div>
 <div id="sources" class="source">{{ sources }}</div>
 <div id="credits" class="source credit">{{ credit }}</div>
+<div id="clears" class="clear"></div>
 </div>
