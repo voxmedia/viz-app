@@ -76,7 +76,7 @@
   }
 
   .mobileImage {
-    display: none
+    display: block
   }
 
   .mobileImage img {
@@ -84,9 +84,9 @@
     height: auto
   }
 
-  @media only screen and (max-width:320px) {
+  @media only screen and (min-width:350px) {
     .mobileImage {
-      display: block
+      display: none
     }
   }
 </style>
