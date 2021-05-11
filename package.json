@@ -73,7 +73,7 @@
     "glob": "^7.1.2",
     "glob-copy": "^0.1.0",
     "js-yaml": "^3.13.1",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.21",
     "luxon": "^1.0.0",
     "node-fs-extra": "^0.8.2",
     "s3-client-control": "^4.5.2",
